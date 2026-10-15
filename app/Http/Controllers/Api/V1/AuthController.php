@@ -109,13 +109,13 @@ class AuthController extends Controller
                 Log::error('Signup SMS OTP failed: ' . $e->getMessage());
             }
 
-            if ($email) {
-                try {
-                    Mail::to($email)->send(new SignupOtpMail($otp, $user, 'signup'));
-                } catch (\Throwable $e) {
-                    Log::error('Signup email OTP failed: ' . $e->getMessage());
-                }
-            }
+            // if ($email) {
+            //     try {
+            //         Mail::to($email)->send(new SignupOtpMail($otp, $user, 'signup'));
+            //     } catch (\Throwable $e) {
+            //         Log::error('Signup email OTP failed: ' . $e->getMessage());
+            //     }
+            // }
         }
 
         // ---------- Activity log ----------
