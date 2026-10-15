@@ -1,6 +1,6 @@
 # Recipe Management Project Setup Guide 🚀
 
-Welcome to the **Recipe Management** project! Follow these steps to set up the application correctly. 😊
+Welcome to the **Coach Devanshi Doshi** project! Follow these steps to set up the application correctly. 😊
 
 ---
 
