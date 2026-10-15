@@ -1,0 +1,765 @@
+{
+	"info": {
+		"_postman_id": "c8d32f6a-497b-4df2-895a-f6d3b497042a",
+		"name": "Coach Devanshi Doshi - Auth API",
+		"description": "Complete Postman collection for Coach Devanshi Doshi Auth API.\nIncludes Signup, Mobile & Email OTP Login, Social Login, Forgot & Reset Password, and Logout.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Signup Flow",
+			"item": [
+				{
+					"name": "Signup (Mobile Required, Email Optional)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var json = pm.response.json();",
+									"    if (json.data && json.data.otp) {",
+									"        pm.collectionVariables.set(\"signup_otp\", json.data.otp);",
+									"        console.log(\"Saved signup_otp:\", json.data.otp);",
+									"    }",
+									"    if (json.data && json.data.mobile) {",
+									"        pm.collectionVariables.set(\"mobile\", json.data.mobile);",
+									"    }",
+									"    if (json.data && json.data.phone_code) {",
+									"        pm.collectionVariables.set(\"phone_code\", json.data.phone_code);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Devanshi\",\n    \"last_name\": \"Doshi\",\n    \"phone_code\": \"{{phone_code}}\",\n    \"mobile\": \"{{mobile}}\",\n    \"email\": \"{{email}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/signup",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"signup"
+							]
+						},
+						"description": "Signup new user. Mobile and phone_code are required. Email is optional. Generates OTP and sends to mobile (and email if provided)."
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Signup OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var json = pm.response.json();",
+									"    if (json.data && json.data.token) {",
+									"        pm.collectionVariables.set(\"auth_token\", json.data.token);",
+									"        console.log(\"Saved auth_token successfully!\");",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_code\": \"{{phone_code}}\",\n    \"mobile\": \"{{mobile}}\",\n    \"otp\": \"{{signup_otp}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/verify-signup-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"verify-signup-otp"
+							]
+						},
+						"description": "Verifies mobile OTP for signup. Marks is_signup = true and returns Passport access token."
+					},
+					"response": []
+				},
+				{
+					"name": "Resend Signup OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var json = pm.response.json();",
+									"    if (json.data && json.data.otp) {",
+									"        pm.collectionVariables.set(\"signup_otp\", json.data.otp);",
+									"        console.log(\"Saved new signup_otp:\", json.data.otp);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_code\": \"{{phone_code}}\",\n    \"mobile\": \"{{mobile}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/resend-signup-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"resend-signup-otp"
+							]
+						},
+						"description": "Resends a fresh OTP to the user's mobile number (and email if linked)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Login Flow",
+			"item": [
+				{
+					"name": "Login - Send OTP to Mobile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var json = pm.response.json();",
+									"    if (json.data && json.data.otp) {",
+									"        pm.collectionVariables.set(\"login_otp\", json.data.otp);",
+									"        console.log(\"Saved mobile login_otp:\", json.data.otp);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"mobile\",\n    \"login_type\": \"otp\",\n    \"phone_code\": \"{{phone_code}}\",\n    \"mobile\": \"{{mobile}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Initiates mobile OTP login. Generates OTP, saves it in database, and sends to the mobile number."
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Send OTP to Email",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var json = pm.response.json();",
+									"    if (json.data && json.data.otp) {",
+									"        pm.collectionVariables.set(\"login_otp\", json.data.otp);",
+									"        console.log(\"Saved email login_otp:\", json.data.otp);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"email\",\n    \"login_type\": \"otp\",\n    \"email\": \"{{email}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Initiates email OTP login. Generates OTP, saves it in database, and sends it via email."
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Login OTP (Mobile)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var json = pm.response.json();",
+									"    if (json.data && json.data.token) {",
+									"        pm.collectionVariables.set(\"auth_token\", json.data.token);",
+									"        console.log(\"Saved auth_token successfully!\");",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"mobile\",\n    \"phone_code\": \"{{phone_code}}\",\n    \"mobile\": \"{{mobile}}\",\n    \"otp\": \"{{login_otp}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login-signup-verify-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login-signup-verify-otp"
+							]
+						},
+						"description": "Verifies mobile OTP, clears OTP in DB, and returns user details with Passport authToken."
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Login OTP (Email)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var json = pm.response.json();",
+									"    if (json.data && json.data.token) {",
+									"        pm.collectionVariables.set(\"auth_token\", json.data.token);",
+									"        console.log(\"Saved auth_token successfully!\");",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"email\",\n    \"email\": \"{{email}}\",\n    \"otp\": \"{{login_otp}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login-signup-verify-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login-signup-verify-otp"
+							]
+						},
+						"description": "Verifies email OTP, clears OTP in DB, marks email_verified_at, and returns user details with Passport authToken."
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var json = pm.response.json();",
+									"    if (json.data && json.data.token) {",
+									"        pm.collectionVariables.set(\"auth_token\", json.data.token);",
+									"        console.log(\"Saved auth_token successfully!\");",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"email\",\n    \"login_type\": \"password\",\n    \"email\": \"{{email}}\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Password login for registered users."
+					},
+					"response": []
+				},
+				{
+					"name": "Social Login / Signup",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var json = pm.response.json();",
+									"    if (json.data && json.data.token) {",
+									"        pm.collectionVariables.set(\"auth_token\", json.data.token);",
+									"        console.log(\"Saved auth_token successfully!\");",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Devanshi\",\n    \"last_name\": \"Doshi\",\n    \"email\": \"devanshi.social@example.com\",\n    \"lang\": \"en\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/social-login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"social-login"
+							]
+						},
+						"description": "Authenticates or signs up users via social login providers (Google, Apple, Facebook)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Forgot & Reset Password",
+			"item": [
+				{
+					"name": "Forgot Password - Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"email\",\n    \"email\": \"{{email}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/forgot-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"forgot-password"
+							]
+						},
+						"description": "Requests forgot password OTP sent to email."
+					},
+					"response": []
+				},
+				{
+					"name": "Forgot Password - Mobile",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"mobile\",\n    \"phone_code\": \"{{phone_code}}\",\n    \"mobile\": \"{{mobile}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/forgot-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"forgot-password"
+							]
+						},
+						"description": "Requests forgot password OTP sent to mobile."
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Forgot OTP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var json = pm.response.json();",
+									"    if (json.data && json.data.token) {",
+									"        pm.collectionVariables.set(\"auth_token\", json.data.token);",
+									"        console.log(\"Saved auth_token successfully!\");",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_code\": \"{{phone_code}}\",\n    \"mobile\": \"{{mobile}}\",\n    \"otp\": \"{{signup_otp}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/verify-forgot-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"verify-forgot-otp"
+							]
+						},
+						"description": "Verifies forgot password OTP and returns auth token for reset password."
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{email}}\",\n    \"password\": \"newpassword123\",\n    \"confirm_password\": \"newpassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/reset-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reset-password"
+							]
+						},
+						"description": "Resets the user password using Bearer authentication token obtained from verify-forgot-otp."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Authenticated",
+			"item": [
+				{
+					"name": "Logout",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fcm_token\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"logout"
+							]
+						},
+						"description": "Revokes user Passport access token and removes FCM token."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://2men1kitchenweb.test",
+			"type": "string"
+		},
+		{
+			"key": "phone_code",
+			"value": "+91",
+			"type": "string"
+		},
+		{
+			"key": "mobile",
+			"value": "9879923131",
+			"type": "string"
+		},
+		{
+			"key": "email",
+			"value": "devanshi@example.com",
+			"type": "string"
+		},
+		{
+			"key": "signup_otp",
+			"value": "123456",
+			"type": "string"
+		},
+		{
+			"key": "login_otp",
+			"value": "123456",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

@@ -1,0 +1,91 @@
+/* ===============================
+   BRAND COLOR VARIABLES
+================================ */
+:root {
+    --brand-primary: #F29217;
+    --brand-dark: #1E1E1E;
+    --brand-text: #414141;
+    --brand-bg: #F4F4E9;
+    --brand-accent: #9D651E;
+    --brand-danger: #c33b3b;
+}
+
+/* ===============================
+   GLOBAL TEXT & BACKGROUND
+================================ */
+body {
+    font-family: 'Gabarito', sans-serif !important;
+    color: var(--brand-text);
+    background-color: var(--brand-bg);
+}
+
+/* ===============================
+   HEADINGS
+================================ */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--brand-dark);
+    font-weight: 600;
+}
+
+/* ===============================
+   LINKS
+================================ */
+a {
+    color: var(--brand-primary);
+}
+a:hover {
+    color: var(--brand-accent);
+}
+
+/* ===============================
+   BUTTONS (Bootstrap Override)
+================================ */
+.btn-primary {
+    background-color: var(--brand-primary) !important;
+    border-color: var(--brand-primary) !important;
+}
+.btn-primary:hover {
+    background-color: var(--brand-accent) !important;
+    border-color: var(--brand-accent) !important;
+}
+
+.btn-success {
+    background-color: var(--brand-primary) !important;
+    border-color: var(--brand-primary) !important;
+}
+
+/* ===============================
+   FORM ELEMENTS
+================================ */
+.form-control:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 0.15rem rgba(242, 146, 23, 0.25);
+}
+
+/* ===============================
+   TABLES
+================================ */
+.table thead th {
+    color: var(--brand-dark);
+    border-bottom: 2px solid var(--brand-accent);
+}
+
+/* ===============================
+   BADGES & ALERTS
+================================ */
+.badge-primary {
+    background-color: var(--brand-primary);
+}
+
+.alert-danger {
+    background-color: rgba(195, 59, 59, 0.1);
+    color: var(--brand-danger);
+    border-color: var(--brand-danger);
+}
+
+/* ===============================
+   DIVIDERS
+================================ */
+hr {
+    border-top: 1px solid var(--brand-accent);
+}
