@@ -26,7 +26,7 @@ class AuthController extends Controller
 
     public function __construct(Request $request)
     {
-        setApiLocale($request->lang);
+        // Direct messages used across controller (no multilang required)
     }
 
     /**
@@ -82,7 +82,7 @@ class AuthController extends Controller
 
         // ---------- Master numbers (static OTP) or random OTP ----------
         $isMaster = in_array((string) $mobile, self::MASTER_MOBILES, true);
-        $otp      = $isMaster ? self::MASTER_OTP : (string) random_int(1000, 9999);
+        $otp      = $isMaster ? self::MASTER_OTP : (string) random_int(100000, 999999);
 
         $user = User::updateOrCreate(
             [
@@ -261,7 +261,7 @@ class AuthController extends Controller
 
         // ---------- Generate OTP (master numbers get the static OTP) ----------
         $isMaster = in_array((string) $user->mobile, self::MASTER_MOBILES, true);
-        $otp      = $isMaster ? self::MASTER_OTP : (string) random_int(1000, 9999);
+        $otp      = $isMaster ? self::MASTER_OTP : (string) random_int(100000, 999999);
 
         $user->update([
             'otp'            => $otp,
@@ -330,19 +330,19 @@ class AuthController extends Controller
         }
 
         if (!$user) {
-            return jsonResponse(false, __('api.user_not_found'));
+            return jsonResponse(false, 'User not found.');
         }
 
         if ($user->status !== 'Active') {
-            return jsonResponse(false, __('api.user_deactivated'));
+            return jsonResponse(false, 'User account is deactivated. Please contact support.');
         }
 
         if ($user->is_social) {
-            return jsonResponse(false, __('api.social_login_required'));
+            return jsonResponse(false, 'This account is registered with a social login. Please sign in using your social account.');
         }
 
         $isMaster = ($field === 'mobile' && in_array((string) $user->mobile, self::MASTER_MOBILES, true));
-        $otp      = $isMaster ? self::MASTER_OTP : (string) random_int(1000, 9999);
+        $otp      = $isMaster ? self::MASTER_OTP : (string) random_int(100000, 999999);
 
         $user->update([
             'otp'            => $otp,
@@ -404,19 +404,19 @@ class AuthController extends Controller
         $user = auth()->user();
 
         if (!$user) {
-            return jsonResponse(false, __('api.user_not_found'));
+            return jsonResponse(false, 'User not found.');
         }
 
         if ($user->status !== 'Active') {
-            return jsonResponse(false, __('api.user_deactivated'));
+            return jsonResponse(false, 'User account is deactivated. Please contact support.');
         }
 
         if ($user->email != $request->email) {
-            return jsonResponse(false, __('api.invalid_email'));
+            return jsonResponse(false, 'Invalid email address.');
         }
 
         if ($user->is_social) {
-            return jsonResponse(false, __('api.social_account_exists'));
+            return jsonResponse(false, 'This account is registered with a social login. Password reset is not allowed.');
         }
 
         $user->update([
@@ -432,14 +432,14 @@ class AuthController extends Controller
             explicitCauser: $user
         );
 
-        return jsonResponse(true, __('api.password_reset_success'));
+        return jsonResponse(true, 'Password reset successfully.');
     }
 
     /**
      * Login:
      * Supports:
-     * 1. mobile: sends OTP to mobile (or checks password).
-     * 2. email: sends OTP to email (or checks password).
+     * 1. mobile: sends OTP to mobile.
+     * 2. email: sends OTP to email.
      */
     public function login(Request $request)
     {
@@ -470,24 +470,25 @@ class AuthController extends Controller
         }
 
         if (!$user) {
-            return jsonResponse(false, __('api.user_not_found'));
+            return jsonResponse(false, 'User not found.');
         }
 
         if (!$user->is_signup) {
-            return jsonResponse(false, __('api.user_not_verified'));
+            return jsonResponse(false, 'Account is not verified. Please complete signup verification first.');
         }
 
         if ($user->is_social) {
-            return jsonResponse(false, __('api.social_login_required'));
+            return jsonResponse(false, 'This account is linked to a social login. Please sign in using your social account.');
         }
 
         if ($user->status !== 'Active') {
-            return jsonResponse(false, __('api.user_deactivated'));
+            return jsonResponse(false, 'User account is deactivated. Please contact support.');
         }
+
 
         /* ================= OTP LOGIN ================= */
         $isMaster = ($field === 'mobile' && in_array((string) $user->mobile, self::MASTER_MOBILES, true));
-        $otp      = $isMaster ? self::MASTER_OTP : (string) random_int(1000, 9999);
+        $otp      = $isMaster ? self::MASTER_OTP : (string) random_int(100000, 999999);
 
         $user->update([
             'otp'            => $otp,
@@ -569,15 +570,15 @@ class AuthController extends Controller
         }
 
         if (!$user) {
-            return jsonResponse(false, __('api.user_not_found'));
+            return jsonResponse(false, 'User not found.');
         }
 
         if ($user->is_social) {
-            return jsonResponse(false, __('api.social_account_exists'));
+            return jsonResponse(false, 'This account is linked to a social login account. Please sign in using your social account.');
         }
 
         if ($user->status !== 'Active') {
-            return jsonResponse(false, __('api.user_deactivated'));
+            return jsonResponse(false, 'User account is deactivated. Please contact support.');
         }
 
         // Verify OTP against DB
@@ -587,7 +588,7 @@ class AuthController extends Controller
             Carbon::now()->gt($user->otp_expires_at) ||
             (string) $user->otp !== (string) $request->otp
         ) {
-            return jsonResponse(false, __('api.otp_invalid'));
+            return jsonResponse(false, 'Invalid or expired OTP. Please request a new one.');
         }
 
         $updateData = [
@@ -620,7 +621,7 @@ class AuthController extends Controller
             explicitCauser: $user
         );
 
-        return jsonResponse(true, __('api.login_success'), [
+        return jsonResponse(true, 'Login successful.', [
             'token' => $token,
             'user'  => new UserResource($user),
         ]);
@@ -644,7 +645,7 @@ class AuthController extends Controller
             subject: $request->user()
         );
 
-        return jsonResponse(true, __('api.logout_success'));
+        return jsonResponse(true, 'Logged out successfully.');
     }
 
     /**
@@ -673,7 +674,7 @@ class AuthController extends Controller
         |--------------------------------------------------------------------------
         */
         if ($user && !$user->is_social) {
-            return jsonResponse(false, __('api.custom_login_required'));
+            return jsonResponse(false, 'This email is registered with a custom account. Please log in using your standard credentials.');
         }
 
         /*
@@ -683,7 +684,7 @@ class AuthController extends Controller
         */
         if ($user && $user->is_social) {
             if ($user->status !== 'Active') {
-                return jsonResponse(false, __('api.user_deactivated'));
+                return jsonResponse(false, 'User account is deactivated. Please contact support.');
             }
 
             $token = $user->createToken('authToken')->accessToken;
@@ -697,7 +698,7 @@ class AuthController extends Controller
                 explicitCauser: $user
             );
 
-            return jsonResponse(true, __('api.login_success'), [
+            return jsonResponse(true, 'Login successful.', [
                 'token' => $token,
                 'user'  => new UserResource($user),
             ]);
@@ -731,7 +732,7 @@ class AuthController extends Controller
             explicitCauser: $user
         );
 
-        return jsonResponse(true, __('api.signup_success'), [
+        return jsonResponse(true, 'Signup successful.', [
             'token' => $token,
             'user'  => new UserResource($user),
         ]);
