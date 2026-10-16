@@ -37,7 +37,7 @@ class ProfileController extends Controller
     } 
 
     public function getStatesOrCities(Request $request)
-    {   
+    {  
         $validator = Validator::make($request->all(), [
             'state_id' => 'nullable|numeric|exists:states,id',
         ]);
@@ -55,7 +55,7 @@ class ProfileController extends Controller
 
             return jsonResponse(true, __('api.cities_fetched'), $cities);
         }
-        $states = State::select('id','name')->where('country_id',103)->orderBy('name','asc')->get();        
+        $states = State::select('id','name')->where('country_id',101)->orderBy('name','asc')->get();        
         if ($states->isEmpty()) {
             return jsonResponse(true, __('api.states_not_found'));
         }        

@@ -134,6 +134,17 @@
                 </li>
                 @endif
 
+                <!-- Onboarding Masters -->
+                @if(hasPermission('view_onboarding_master'))
+                <li class="slide {{ $currentController === 'OnboardingMasterController' ? 'is-expanded active' : '' }}">
+                    <a class="side-menu__item has-link {{ $currentController === 'OnboardingMasterController' ? 'active' : '' }}" href="{{ route('admin.onboarding-masters.index') }}">
+                        <i class="side-menu__icon fe fe-check-square"></i>
+                        <span class="side-menu__label">Onboarding Masters</span>
+                    </a>
+                </li>
+                @endif
+
+
                 <!-- Ingredients -->
                 @if(hasPermission('view_ingredients'))
                 <li class="slide {{ $currentController === 'IngredientsController' ? 'is-expanded active' : '' }}">

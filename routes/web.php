@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\ChapterController;
 use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\MCQController;
+use App\Http\Controllers\Admin\OnboardingMasterController;
 
 /*
 |--------------------------------------------------------------------------
@@ -150,4 +151,13 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'set.language'
     */
     Route::resource('preferences', PreferenceController::class);
     Route::put('preferences/change-status/{uuid}',[PreferenceController::class, 'changeStatus'])->name('preferences.change-status');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Onboarding Master Management
+    |--------------------------------------------------------------------------
+    */
+    Route::resource('onboarding-masters', OnboardingMasterController::class);
+    Route::put('onboarding-masters/change-status/{uuid}', [OnboardingMasterController::class, 'changeStatus'])->name('onboarding-masters.change-status');
 });
+
