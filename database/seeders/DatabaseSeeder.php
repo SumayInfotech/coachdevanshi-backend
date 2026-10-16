@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             PreferencesSeeder::class,
             CategorySeeder::class,
+            OnboardingMasterSeeder::class,
         ]);
     }
 }

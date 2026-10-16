@@ -4,8 +4,12 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\PreferenceController;
+use App\Http\Controllers\Api\V1\OnboardingMasterController;
 
 Route::prefix('v1')->group(function () {
+
+    
+
 
     /*
     |--------------------------------------------------------------------------
@@ -57,5 +61,8 @@ Route::prefix('v1')->group(function () {
         //SendVerifyMobileOtp
         Route::post('send-mobile-otp', [ProfileController::class, 'sendMobileOtp']);
         Route::post('verify-mobile-otp', [ProfileController::class, 'verifyMobileOtp']);
+
+        // Onboarding Masters
+        Route::get('onboarding-masters', [OnboardingMasterController::class, 'index']);
     });
 });

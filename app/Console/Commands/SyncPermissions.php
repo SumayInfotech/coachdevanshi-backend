@@ -57,7 +57,14 @@ class SyncPermissions extends Command
             ['name' => 'edit_preference', 'display_name' => 'Edit Preference', 'group_name' => 'preference_management'],
             ['name' => 'view_preference', 'display_name' => 'View Preference', 'group_name' => 'preference_management'],
             ['name' => 'delete_preference', 'display_name' => 'Delete Preference', 'group_name' => 'preference_management'],
+
+            //Onboarding Master Management
+            ['name' => 'add_onboarding_master', 'display_name' => 'Add Onboarding Master', 'group_name' => 'onboarding_master_management'],
+            ['name' => 'edit_onboarding_master', 'display_name' => 'Edit Onboarding Master', 'group_name' => 'onboarding_master_management'],
+            ['name' => 'view_onboarding_master', 'display_name' => 'View Onboarding Master', 'group_name' => 'onboarding_master_management'],
+            ['name' => 'delete_onboarding_master', 'display_name' => 'Delete Onboarding Master', 'group_name' => 'onboarding_master_management'],
         ];
+
 
         // Fetch the super_admin role
         $adminRole = Role::where('name', 'super_admin')->first();
