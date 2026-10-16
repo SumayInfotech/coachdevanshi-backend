@@ -96,7 +96,7 @@ class AuthController extends Controller
                 'identifier_type' => 'mobile',
                 'sign_up_type'    => 'otp',
                 'otp'             => $otp,
-                'otp_expires_at'  => Carbon::now()->addMinutes(10),
+                'otp_expires_at'  => Carbon::now()->addMinutes(2),
                 'is_signup'       => false,
             ]
         );
@@ -104,7 +104,7 @@ class AuthController extends Controller
         // ---------- Send OTP (skipped for master numbers) ----------
         if (!$isMaster) {
             try {
-                // sendOtp($otp, $user); // SMS gateway
+                sendOtp($phoneCode . $mobile, $otp);
             } catch (\Throwable $e) {
                 Log::error('Signup SMS OTP failed: ' . $e->getMessage());
             }
@@ -131,9 +131,9 @@ class AuthController extends Controller
         );
 
         // ---------- Response ----------
-        return jsonResponse(true, 'OTP has been sent to your mobile number. It is valid for 10 minutes.', [
-            'otp'        => $otp,      // remove in production
-            'expires_in' => 600,
+        return jsonResponse(true, 'OTP has been sent to your mobile number. It is valid for 2 minutes.', [
+            'otp'        => null,      // remove in production
+            'expires_in' => 120,
             'uuid'       => $user->uuid,
             'mobile'     => $user->mobile,
             'phone_code' => $user->phone_code,
@@ -265,13 +265,13 @@ class AuthController extends Controller
 
         $user->update([
             'otp'            => $otp,
-            'otp_expires_at' => Carbon::now()->addMinutes(10),
+            'otp_expires_at' => Carbon::now()->addMinutes(2),
         ]);
 
         // ---------- Send OTP (skipped for master numbers) ----------
         if (!$isMaster) {
             try {
-                // sendOtp($otp, $user); // SMS gateway
+                sendOtp($user->phone_code . $user->mobile, $otp);
             } catch (\Throwable $e) {
                 Log::error('Resend SMS OTP failed: ' . $e->getMessage());
             }
@@ -295,9 +295,9 @@ class AuthController extends Controller
             explicitCauser: $user
         );
 
-        return jsonResponse(true, 'A new OTP has been sent to your mobile number. It is valid for 10 minutes.', [
-            'otp'        => $otp,      // remove in production
-            'expires_in' => 600,
+        return jsonResponse(true, 'A new OTP has been sent to your mobile number. It is valid for 2 minutes.', [
+            'otp'        => null,      // remove in production
+            'expires_in' => 120,
         ]);
     }
 
@@ -346,7 +346,7 @@ class AuthController extends Controller
 
         $user->update([
             'otp'            => $otp,
-            'otp_expires_at' => Carbon::now()->addMinutes(10),
+            'otp_expires_at' => Carbon::now()->addMinutes(2),
         ]);
 
         if ($field === 'email') {
@@ -376,12 +376,12 @@ class AuthController extends Controller
         );
 
         $message = $field === 'email'
-            ? 'OTP has been sent to your email address. It is valid for 10 minutes.'
-            : 'OTP has been sent to your mobile number. It is valid for 10 minutes.';
+            ? 'OTP has been sent to your email address. It is valid for 2 minutes.'
+            : 'OTP has been sent to your mobile number. It is valid for 2 minutes.';
 
         return jsonResponse(true, $message, [
             'otp'        => $otp,      // remove in production
-            'expires_in' => 600,
+            'expires_in' => 120,
             'type'       => $field,
         ]);
     }
@@ -446,7 +446,7 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'type'       => 'required|in:email,mobile',
             'email'      => 'nullable|required_if:type,email|email',
-            'phone_code' => 'nullable|string|max:6',
+            'phone_code' => 'required|string|max:6',
             'mobile'     => 'nullable|required_if:type,mobile|digits_between:6,15',
         ]);
 
@@ -459,7 +459,7 @@ class AuthController extends Controller
         if ($field === 'mobile') {
             $user = User::active()
                 ->where('mobile', $request->mobile)
-                ->when($request->filled('phone_code'), fn ($q) => $q->where('phone_code', $request->phone_code))
+                ->where('phone_code', $request->phone_code)
                 ->where('user_type', 'customer')
                 ->first();
         } else {
@@ -492,7 +492,7 @@ class AuthController extends Controller
 
         $user->update([
             'otp'            => $otp,
-            'otp_expires_at' => Carbon::now()->addMinutes(10),
+            'otp_expires_at' => Carbon::now()->addMinutes(2),
         ]);
 
         if ($field === 'email') {
@@ -505,8 +505,7 @@ class AuthController extends Controller
 
         if ($field === 'mobile' && !$isMaster) {
             try {
-                // SMS sending logic
-                // sendOtp('+91' . $user->mobile);
+                sendOtp($user->phone_code . $user->mobile, $otp);
             } catch (\Throwable $e) {
                 Log::error('Login SMS OTP failed: ' . $e->getMessage());
             }
@@ -523,12 +522,12 @@ class AuthController extends Controller
         );
 
         $message = $field === 'email'
-            ? 'OTP has been sent to your email address. It is valid for 10 minutes.'
-            : 'OTP has been sent to your mobile number. It is valid for 10 minutes.';
+            ? 'OTP has been sent to your email address. It is valid for 2 minutes.'
+            : 'OTP has been sent to your mobile number. It is valid for 2 minutes.';
 
         return jsonResponse(true, $message, [
-            'otp'        => $otp,      // remove in production
-            'expires_in' => 600,
+            'otp'        => null,      // remove in production
+            'expires_in' => 120,
             'type'       => $field,
             'mobile'     => $user->mobile,
             'phone_code' => $user->phone_code,
@@ -545,7 +544,7 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'type'       => 'required|in:email,mobile',
             'email'      => 'nullable|required_if:type,email|email',
-            'phone_code' => 'nullable|string|max:6',
+            'phone_code' => 'required|string|max:6',
             'mobile'     => 'nullable|required_if:type,mobile|digits_between:6,15',
             'otp'        => 'required|digits:6',
         ]);
@@ -559,7 +558,7 @@ class AuthController extends Controller
         if ($field === 'mobile') {
             $user = User::active()
                 ->where('mobile', $request->mobile)
-                ->when($request->filled('phone_code'), fn ($q) => $q->where('phone_code', $request->phone_code))
+                ->where('phone_code', $request->phone_code)
                 ->where('user_type', 'customer')
                 ->first();
         } else {

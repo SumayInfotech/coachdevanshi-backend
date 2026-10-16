@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use \App\Helpers\FlangeHelper;
-use Twilio\Rest\Client;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\ProjectRequest;
 use App\Models\ProjectGasResult;
@@ -189,29 +189,59 @@ if (!function_exists('dateFormat')) {
     }
 }
 if (!function_exists('sendOtp')) {
-    function sendOtp(string $phoneNumber)
+    /**
+     * Send OTP via Authyo.io SMS API.
+     * Returns ['success' => true, 'maskId' => '...'] on success.
+     * The maskId must be stored temporarily and passed to verifyOtp().
+     */
+    function sendOtp(string $phoneNumber, string $otp = null)
     {
         // echo $phoneNumber;die;
+        // echo $otp;die;
         try {
-            $sid    = env('TWILIO_SID');
-            $token  = env('TWILIO_AUTH_TOKEN');
-            $verifySid = env('TWILIO_VERIFY_SID');
-            $twilio = new Client($sid, $token);
+            $appId        = env('AUTHYO_APP_ID');
+            $clientId     = env('AUTHYO_CLIENT_ID');
+            $clientSecret = env('AUTHYO_CLIENT_SECRET');
+            $params = [
+                'to'        => $phoneNumber,
+                'expiry'    => 10,
+                'otpLength' => 6,
+                'authWay'   => 'SMS',
+            ];
 
-            $verification = $twilio->verify->v2
-                ->services($verifySid)
-                ->verifications
-                ->create($phoneNumber, "sms");
+            // Pass a custom OTP if provided (e.g., for master/debug OTPs)
+            if ($otp !== null) {
+                $params['otp'] = $otp;
+            }
 
+            $response = Http::withHeaders([
+                'clientId'     => $clientId,
+                'clientSecret' => $clientSecret,
+                'origin'       => $appId,
+            ])->get('https://app.authyo.io/api/v1/auth/sendotp', $params);
+
+            $body = $response->json();
+
+            if ($response->successful() && isset($body['status']) && $body['status'] === true) {
+                return [
+                    'success' => true,
+                    'maskId'  => $body['maskId'] ?? null,
+                    'message' => $body['message'] ?? 'OTP sent successfully',
+                ];
+            }
+
+            \Log::error("Authyo OTP Send Failed", [
+                'phone'    => $phoneNumber,
+                'response' => $body,
+            ]);
             return [
-                'success' => true,
-                'sid'     => $verification->sid,
-                'status'  => $verification->status,
+                'success' => false,
+                'message' => $body['message'] ?? 'Failed to send OTP',
             ];
         } catch (\Exception $e) {
-            \Log::error("Twilio OTP Send Error", [
+            \Log::error("Authyo OTP Send Error", [
                 'error' => $e->getMessage(),
-                'phone' => $phoneNumber
+                'phone' => $phoneNumber,
             ]);
             return [
                 'success' => false,
@@ -222,35 +252,47 @@ if (!function_exists('sendOtp')) {
 }
 
 if (!function_exists('verifyOtp')) {
-    function verifyOtp(string $phoneNumber, string $code)
+    /**
+     * Verify OTP via Authyo.io.
+     * $maskId is the value returned by sendOtp().
+     * $code   is the OTP entered by the user.
+     */
+    function verifyOtp(string $maskId, string $code)
     {
         try {
-            $sid    = env('TWILIO_SID');
-            $token  = env('TWILIO_AUTH_TOKEN');
-            $verifySid = env('TWILIO_VERIFY_SID');
-            $twilio = new Client($sid, $token);
+            $appId        = env('AUTHYO_APP_ID');
+            $clientId     = env('AUTHYO_CLIENT_ID');
+            $clientSecret = env('AUTHYO_CLIENT_SECRET');
 
-            $verificationCheck = $twilio->verify->v2
-                ->services($verifySid)
-                ->verificationChecks
-                ->create([
-                    "to" => $phoneNumber,
-                    "code" => $code
-                ]);
-                // echo "<pre>";print_r($verificationCheck);"</pre>";die;
-            if ($verificationCheck->status === "approved") {
+            $response = Http::withHeaders([
+                'clientId'     => $clientId,
+                'clientSecret' => $clientSecret,
+                'origin'       => $appId,
+            ])->post('https://app.authyo.io/api/v1/auth/verifyotp', [
+                'maskId' => $maskId,
+                'otp'    => $code,
+            ]);
+
+            $body = $response->json();
+
+            if ($response->successful() && isset($body['status']) && $body['status'] === true) {
                 return [
                     'success' => true,
-                    'message' => 'OTP verified successfully',
+                    'message' => $body['message'] ?? 'OTP verified successfully',
                 ];
             }
 
+            Log::warning("Authyo OTP Verification Failed", [
+                'maskId'   => $maskId,
+                'response' => $body,
+            ]);
+
             return [
                 'success' => false,
-                'message' => 'Invalid or expired OTP',
+                'message' => $body['message'] ?? 'Invalid or expired OTP',
             ];
         } catch (\Exception $e) {
-            Log::error("Twilio Verify OTP Check Error: " . $e->getMessage());
+            Log::error("Authyo OTP Verify Error: " . $e->getMessage());
             return [
                 'success' => false,
                 'message' => $e->getMessage(),
