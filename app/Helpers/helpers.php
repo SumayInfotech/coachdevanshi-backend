@@ -458,3 +458,26 @@ if (!function_exists('paginatedResponse')) {
 //         ];
 //     }
 // }
+if (!function_exists('onboarding_chapter_categories')) {
+    /**
+     * Onboarding chapter => category slugs.
+     * Pass a chapter number to get that chapter's slugs, or nothing for the whole map.
+     */
+    function onboarding_chapter_categories(?int $chapter = null): array
+    {
+        $map = [
+            1 => ['coaching_journey'],
+            2 => ['approaches_tried', 'confident_areas'],
+            3 => ['medical_diagnoses', 'family_medical_history', 'recent_clinical_symptoms', 'allergies_intolerances', 'hormonal_life_stage'],
+            4 => ['eating_pattern', 'cultural_fasting_practices', 'food_env_who_cooks', 'food_env_support_level', 'food_env_meals_out_per_week', 'intake_fruit', 'intake_vegetables', 'intake_water', 'intake_caffeine', 'intake_sugary', 'substance_habits', 'digestive_health'],
+            5 => ['sleep_night_waking', 'sleep_first_hour', 'activity_level', 'activity_daily_steps', 'activity_workouts_per_week', 'activity_available_days', 'stress_first_changes', 'readiness_score', 'consistency_interrupters'],
+            6 => ['goal_mindset'],
+        ];
+
+        if ($chapter === null) {
+            return $map;
+        }
+
+        return $map[$chapter] ?? [];
+    }
+}

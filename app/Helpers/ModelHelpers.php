@@ -36,3 +36,9 @@ function UserFcmToken(){
 function Preference(){
     return app(\App\Models\Preference::class);
 }
+function UserPreference(){
+    return app(\App\Models\UserPreference::class);
+}
+function OnboardingMaster(){
+    return app(\App\Models\OnboardingMaster::class);
+}
