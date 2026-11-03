@@ -527,7 +527,8 @@ class AuthController extends Controller
             : 'OTP has been sent to your mobile number. It is valid for 2 minutes.';
 
         return jsonResponse(true, $message, [
-            'otp'        => null,      // remove in production
+            'otp'        => $otp,      // remove in production
+            //'otp'        => null,      // remove in production
             'expires_in' => 120,
             'type'       => $field,
             'mobile'     => $user->mobile,
