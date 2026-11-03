@@ -447,7 +447,7 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'type'       => 'required|in:email,mobile',
             'email'      => 'nullable|required_if:type,email|email',
-            'phone_code' => 'required|string|max:6',
+            'phone_code' => 'nullable|required_if:type,mobile|string|max:6',
             'mobile'     => 'nullable|required_if:type,mobile|digits_between:6,15',
         ]);
 
@@ -546,7 +546,7 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'type'       => 'required|in:email,mobile',
             'email'      => 'nullable|required_if:type,email|email',
-            'phone_code' => 'required|string|max:6',
+            'phone_code' => 'nullable|required_if:type,mobile|string|max:6',
             'mobile'     => 'nullable|required_if:type,mobile|digits_between:6,15',
             'otp'        => 'required|digits:6',
         ]);
