@@ -132,7 +132,8 @@ class AuthController extends Controller
 
         // ---------- Response ----------
         return jsonResponse(true, 'OTP has been sent to your mobile number. It is valid for 2 minutes.', [
-            'otp'        => null,      // remove in production
+            //'otp'        => null,      // remove in production
+            'otp'        => $otp,      // remove in production
             'expires_in' => 120,
             'uuid'       => $user->uuid,
             'mobile'     => $user->mobile,
