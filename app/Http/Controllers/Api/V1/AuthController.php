@@ -15,14 +15,14 @@ use App\Http\Resources\UserResource;
 
 class AuthController extends Controller
 {
-    private const MASTER_MOBILES = [
+    public const MASTER_MOBILES = [
         '9879923131',
         '9998550917',
         '9265032740',
         '9913052036',
         '8401482409',
     ];
-    private const MASTER_OTP = '123456';
+    public const MASTER_OTP = '123456';
 
     public function __construct(Request $request)
     {

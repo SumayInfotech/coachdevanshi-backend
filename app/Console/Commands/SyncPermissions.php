@@ -63,6 +63,17 @@ class SyncPermissions extends Command
             ['name' => 'edit_onboarding_master', 'display_name' => 'Edit Onboarding Master', 'group_name' => 'onboarding_master_management'],
             ['name' => 'view_onboarding_master', 'display_name' => 'View Onboarding Master', 'group_name' => 'onboarding_master_management'],
             ['name' => 'delete_onboarding_master', 'display_name' => 'Delete Onboarding Master', 'group_name' => 'onboarding_master_management'],
+
+            //Pathway Management
+            ['name' => 'add_pathway', 'display_name' => 'Add Pathway', 'group_name' => 'pathway_management'],
+            ['name' => 'edit_pathway', 'display_name' => 'Edit Pathway', 'group_name' => 'pathway_management'],
+            ['name' => 'view_pathway', 'display_name' => 'View Pathway', 'group_name' => 'pathway_management'],
+            ['name' => 'delete_pathway', 'display_name' => 'Delete Pathway', 'group_name' => 'pathway_management'],
+
+            //Client Management (plans, coach notes, renewals, chat)
+            ['name' => 'view_client', 'display_name' => 'View Client', 'group_name' => 'client_management'],
+            ['name' => 'edit_client', 'display_name' => 'Manage Client Plans & Notes', 'group_name' => 'client_management'],
+            ['name' => 'chat_client', 'display_name' => 'Chat With Client', 'group_name' => 'client_management'],
         ];
 
 

@@ -18,8 +18,8 @@ class DatabaseSeeder extends Seeder
             UsersSeeder::class,
             RoleSeeder::class,
             PreferencesSeeder::class,
-            CategorySeeder::class,
             OnboardingMasterSeeder::class,
+            PathwaySeeder::class,
         ]);
     }
 }

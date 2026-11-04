@@ -17,6 +17,8 @@ use App\Http\Controllers\Admin\ChapterController;
 use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\MCQController;
 use App\Http\Controllers\Admin\OnboardingMasterController;
+use App\Http\Controllers\Admin\PathwayController;
+use App\Http\Controllers\Admin\ClientController;
 
 /*
 |--------------------------------------------------------------------------
@@ -159,5 +161,30 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'set.language'
     */
     Route::resource('onboarding-masters', OnboardingMasterController::class);
     Route::put('onboarding-masters/change-status/{uuid}', [OnboardingMasterController::class, 'changeStatus'])->name('onboarding-masters.change-status');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Pathway Management
+    |--------------------------------------------------------------------------
+    */
+    Route::resource('pathways', PathwayController::class);
+    Route::put('pathways/change-status/{uuid}', [PathwayController::class, 'changeStatus'])->name('pathways.change-status');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Client Management (onboarding, trackers, plans, coach notes, chat)
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('clients')->name('clients.')->controller(ClientController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/{uuid}', 'show')->name('show');
+        Route::post('/{uuid}/plans', 'storePlan')->name('plans.store');
+        Route::put('/plans/{planUuid}', 'updatePlan')->name('plans.update');
+        Route::put('/renewals/{renewalUuid}', 'updateRenewal')->name('renewals.update');
+        Route::post('/{uuid}/notes', 'storeNote')->name('notes.store');
+        Route::delete('/notes/{noteUuid}', 'destroyNote')->name('notes.destroy');
+        Route::get('/{uuid}/chat', 'chatMessages')->name('chat.messages');
+        Route::post('/{uuid}/chat', 'sendChat')->name('chat.send');
+    });
 });
 

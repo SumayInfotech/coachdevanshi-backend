@@ -31,7 +31,7 @@ class OnboardingMasterController extends Controller
             'addPermission'   => $this->addPermission,
             'moduleFullName'  => 'Onboarding Masters',
             'moduleShortName' => 'Onboarding Master',
-            'categories'      => OnboardingMaster::CATEGORIES,
+            'categories'      => OnboardingMaster::categories(),
         ]);
     }
 

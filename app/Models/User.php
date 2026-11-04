@@ -45,6 +45,10 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'dob' => 'date',
+            'mobile_otp_expires_at' => 'datetime',
+            'is_mobile_verified' => 'boolean',
+            'onboarding_completed_at' => 'datetime',
         ];
     }
 
@@ -102,5 +106,56 @@ class User extends Authenticatable
     public function fcmTokens()
     {
         return $this->hasMany(UserFcmToken::class,'user_uuid','uuid');
+    }
+
+    public function onboardingChapters()
+    {
+        return $this->hasMany(UserOnboardingChapter::class, 'user_uuid', 'uuid');
+    }
+
+    public function consent()
+    {
+        return $this->hasOne(UserConsent::class, 'user_uuid', 'uuid');
+    }
+
+    public function pathway()
+    {
+        return $this->belongsTo(Pathway::class, 'pathway_uuid', 'uuid');
+    }
+
+    public function pathwayProtocols()
+    {
+        return $this->hasMany(UserPathwayProtocol::class, 'user_uuid', 'uuid');
+    }
+
+    public function plans()
+    {
+        return $this->hasMany(UserPlan::class, 'user_uuid', 'uuid');
+    }
+
+    public function activePlan()
+    {
+        return $this->hasOne(UserPlan::class, 'user_uuid', 'uuid')
+            ->ofMany(['end_date' => 'max'], fn ($query) => $query->where('status', 'Active'));
+    }
+
+    public function coachNotes()
+    {
+        return $this->hasMany(CoachNote::class, 'user_uuid', 'uuid');
+    }
+
+    public function chatMessages()
+    {
+        return $this->hasMany(ChatMessage::class, 'user_uuid', 'uuid');
+    }
+
+    public function renewalRequests()
+    {
+        return $this->hasMany(PlanRenewalRequest::class, 'user_uuid', 'uuid');
+    }
+
+    public function scopeCustomer(Builder $query)
+    {
+        return $query->where('user_type', 'customer');
     }
 }

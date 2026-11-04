@@ -38,7 +38,7 @@ class OnboardingMasterDataTable extends DataTable
             ->editColumn('created_at', fn($row) => $row->created_at ? $row->created_at->format('d-m-Y H:i:s') : '-')
 
             ->editColumn('category', function ($row) {
-                $categoryName = OnboardingMaster::CATEGORIES[$row->category] ?? ucwords(str_replace('_', ' ', $row->category));
+                $categoryName = OnboardingMaster::categories()[$row->category] ?? ucwords(str_replace('_', ' ', $row->category));
                 return '<span class="badge bg-primary-transparent text-primary rounded-pill px-3 py-1 font-weight-semibold">'
                     . e($categoryName) .
                 '</span>';

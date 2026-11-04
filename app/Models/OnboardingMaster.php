@@ -23,29 +23,22 @@ class OnboardingMaster extends Model
     ];
 
     /**
-     * Predefined categories across all 6 onboarding chapters
+     * Categories used by the onboarding chapters (config/onboarding.php), keyed by slug.
+     * Label: "<question label> (Chapter 0X)"
      */
-    public const CATEGORIES = [
-        'coaching_journey'         => 'Coaching Journey (Chapter 01)',
-        'goal_type'                => 'Primary Goal (Chapter 02)',
+    public static function categories(): array
+    {
+        $categories = [];
+        foreach (config('onboarding.chapters', []) as $number => $chapter) {
+            foreach ($chapter['fields'] as $field) {
+                if (!empty($field['master'])) {
+                    $categories[$field['master']] = $field['label'] . ' (Chapter ' . str_pad($number, 2, '0', STR_PAD_LEFT) . ')';
+                }
+            }
+        }
 
-        'health_condition'         => 'Medical / Diagnosed Condition (Chapter 03)',
-        'family_history'           => 'Family Medical History (Chapter 03)',
-        'lab_work_marker'          => 'Recent Lab Work Markers (Chapter 03)',
-        'allergy_tolerance_type'   => 'Allergies & Intolerance Level (Chapter 03)',
-        'diet_type'                => 'Diet Type (Chapter 04)',
-        'digestive_symptom'        => 'Digestive Symptoms (Chapter 04)',
-        'bristol_stool_type'       => 'Bristol Stool Scale (Chapter 04)',
-        'hydration_range'          => 'Daily Water Intake (Chapter 04)',
-        'sleep_waking_frequency'   => 'Night Waking Frequency (Chapter 05)',
-        'waking_state'             => 'Waking State (Chapter 05)',
-        'activity_level'           => 'Daily Activity Level (Chapter 05)',
-        'daily_step_range'         => 'Daily Step Range (Chapter 05)',
-        'stress_symptom'           => 'Stress Physical Symptoms (Chapter 05)',
-        'lifestyle_challenge'      => 'Challenges & Obstacles (Chapter 05)',
-        'coaching_support_style'   => 'Coaching Support Style (Chapter 05)',
-        'mindset_statement'        => 'Goal-Oriented Mindset Statement (Chapter 06)',
-    ];
+        return $categories;
+    }
 
 
     public function scopeActive($query)
@@ -60,7 +53,7 @@ class OnboardingMaster extends Model
 
     public function getCategoryLabelAttribute()
     {
-        return self::CATEGORIES[$this->category] ?? ucwords(str_replace('_', ' ', $this->category));
+        return self::categories()[$this->category] ?? ucwords(str_replace('_', ' ', $this->category));
     }
 
     public function getRouteKeyName()

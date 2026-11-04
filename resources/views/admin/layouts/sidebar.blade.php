@@ -68,6 +68,16 @@
                     </a>
                 </li>
 
+                <!-- Clients -->
+                @if(hasPermission('view_client'))
+                <li class="slide {{ $currentController === 'ClientController' ? 'is-expanded active' : '' }}">
+                    <a class="side-menu__item has-link {{ $currentController === 'ClientController' ? 'active' : '' }}" href="{{ route('admin.clients.index') }}">
+                        <i class="side-menu__icon fe fe-heart"></i>
+                        <span class="side-menu__label">Clients</span>
+                    </a>
+                </li>
+                @endif
+
                 {{-- AUTHENTICATION MENU (Parent) --}}
                 @if(hasPermission('view_user') || hasPermission('view_role'))
                     @php
@@ -140,6 +150,16 @@
                     <a class="side-menu__item has-link {{ $currentController === 'OnboardingMasterController' ? 'active' : '' }}" href="{{ route('admin.onboarding-masters.index') }}">
                         <i class="side-menu__icon fe fe-check-square"></i>
                         <span class="side-menu__label">Onboarding Masters</span>
+                    </a>
+                </li>
+                @endif
+
+                <!-- Pathways -->
+                @if(hasPermission('view_pathway'))
+                <li class="slide {{ $currentController === 'PathwayController' ? 'is-expanded active' : '' }}">
+                    <a class="side-menu__item has-link {{ $currentController === 'PathwayController' ? 'active' : '' }}" href="{{ route('admin.pathways.index') }}">
+                        <i class="side-menu__icon fe fe-compass"></i>
+                        <span class="side-menu__label">Pathways</span>
                     </a>
                 </li>
                 @endif

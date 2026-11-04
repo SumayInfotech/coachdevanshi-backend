@@ -1,92 +1,97 @@
 <?php
 
-namespace App\Http\Controllers\Api\v1;
+namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\MealPlanning;
+use App\Http\Resources\PathwayResource;
+use App\Http\Resources\UserPlanResource;
+use App\Support\Journey;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index() {
+    public function __construct(Request $request)
+    {
+        setApiLocale($request->lang);
+    }
+
+    /**
+     * Home screen: greeting, plan validity, coach note, today's overview, check-in status, calendar strip.
+     */
+    public function index()
+    {
         $user = auth()->user();
-        if (!$user) {
-            return jsonResponse(false, __('api.unauthorized'), [], 401);
-        }
+        $today = Journey::today($user);
 
-        $getRecipes = MealPlanning::with('recipe.category')->where('user_uuid', $user->uuid)->whereDate('date', today()->toDateString())->get();
+        $plan = UserPlan()->with('pathway')->active()->where('user_uuid', $user->uuid)->latest('end_date')->first();
+        $note = CoachNote()->where('user_uuid', $user->uuid)->latest()->first();
+        $pathway = $user->pathway_uuid ? Pathway()->where('uuid', $user->pathway_uuid)->first() : null;
+        $protocol = $pathway
+            ? UserPathwayProtocol()->where('user_uuid', $user->uuid)->where('pathway_uuid', $pathway->uuid)->first()
+            : null;
 
-        $categories = Category()::pluck('name');
-
-        $groupedRecipes = $getRecipes->groupBy(function ($meal) {
-
-            $categoryName = $meal->recipe->category->name ?? 'Uncategorized';
-
-            return $categoryMapping[$categoryName] ?? $categoryName;
-        });
-
-        $result = collect();
-
-        foreach ($categories as $category) {
-
-            $meals = $groupedRecipes->get($category, collect());
-
-            $totalMinutes = $meals->sum(function ($meal) {
-                return (int) ($meal->recipe->time_duration ?? 0);
-            });
-
-            $result[$category] = [
-                'total_minutes' => $totalMinutes,
-                'extra_minutes' => $totalMinutes > 60
-                    ? $totalMinutes - 60
-                    : 0,
-
-                'recipes' => $meals->map(function ($meal) {
-                    return [
-                        'meal_planning_uuid' => $meal->uuid,
-                        'recipe_uuid'        => $meal->recipe->uuid,
-                        'title'              => $meal->recipe->title,
-                        'description'        => $meal->recipe->description,
-                        'thumbnail_url'      => getFileUrl($meal->recipe->thumbnail_url),
-                        'time_duration'      => $meal->recipe->time_duration,
-                        'calory'             => $meal->recipe->calory,
-                        'status'             => $meal->status,
-                    ];
-                })->values(),
+        // Calendar strip: current week, Monday - Sunday
+        $weekStart = $today->startOfWeek();
+        $checkinDates = DailyCheckin()->where('user_uuid', $user->uuid)
+            ->whereBetween('record_date', [$weekStart->toDateString(), $weekStart->addDays(6)->toDateString()])
+            ->pluck('record_date')->map(fn ($date) => $date->toDateString())->all();
+        $strip = [];
+        for ($i = 0; $i < 7; $i++) {
+            $day = $weekStart->addDays($i);
+            $strip[] = [
+                'date'              => $day->toDateString(),
+                'day'               => $day->format('D'),
+                'day_number'        => $day->day,
+                'is_today'          => $day->equalTo($today),
+                'has_daily_checkin' => in_array($day->toDateString(), $checkinDates),
             ];
         }
 
-        $suggestedRecipes = Recipe()
-            ->with(['category'])
-            ->active()
-            ->published()
-            ->whereDoesntHave('likes', function ($query) use ($user) {
-                $query->where('user_uuid', $user->uuid);
-            })
-            ->inRandomOrder()
-            ->limit(5)
-            ->get();
+        $steps = Journey::stepsFor($user, $today->toDateString());
 
-        return response()->json([
-            'success' => true,
-            'message' => __('api.meal_plan_fetched'),
-            'data' => [
-                'meal_plan' => $result,
-
-                'suggested_recipes' => $suggestedRecipes->map(function ($recipe) {
-                    return [
-                        'recipe_uuid'   => $recipe->uuid,
-                        'title'         => $recipe->title,
-                        'description'   => $recipe->description,
-                        'thumbnail_url' => $recipe->thumbnail_url
-                            ? getFileUrl($recipe->thumbnail_url)
-                            : null,
-                        'category'      => $recipe->category?->name,
-                        'time_duration' => $recipe->time_duration,
-                        'calory'        => $recipe->calory,
-                    ];
-                })->values(),
+        return jsonResponse(true, __('api.dashboard_fetched'), [
+            'greeting'    => Journey::greeting($user),
+            'name'        => $user->nickname ?: $user->name,
+            'date'        => $today->toDateString(),
+            'date_label'  => $today->format('l, F j'),
+            'quote'       => setting('dashboard_quote', 'Small, grounded rituals build sustainable nourishment.'),
+            'plan'        => $plan ? new UserPlanResource($plan) : null,
+            'renewal_requested' => PlanRenewalRequest()->where('user_uuid', $user->uuid)->where('status', 'Pending')->exists(),
+            'coach_note'  => $note ? ['uuid' => $note->uuid, 'note' => $note->note, 'created_at' => dateFormat($note->created_at)] : null,
+            'today_overview' => [
+                'steps'               => $steps['steps'],
+                'steps_source'        => $steps['source'],
+                'steps_synced_at'     => $steps['synced_at'],
+                'is_health_connected' => (bool) $user->is_health_connected,
+                'health_source'       => $user->health_source,
+                'weight'              => Journey::weightOverview($user),
             ],
+            'checkins' => [
+                'micro'    => Journey::microStatus($user),
+                'weekly'   => Journey::weeklyStatus($user),
+                'baseline' => Journey::baselineStatus($user),
+            ],
+            'calendar_strip' => $strip,
+            'onboarding'     => [
+                'is_completed'       => (bool) $user->is_onboarding_completed,
+                'completed_chapters' => UserOnboardingChapter()->where('user_uuid', $user->uuid)->where('status', 'completed')->count(),
+                'total_chapters'     => count(config('onboarding.chapters')),
+                'pathway'            => $pathway ? new PathwayResource($pathway) : null,
+                'protocol_status'    => $pathway?->protocol_key ? ($protocol?->status ?? 'pending') : null,
+            ],
+            'is_home_tour_completed' => (bool) $user->is_home_tour_completed,
+            'unread_notifications'   => AppNotification()->unread()->where('user_uuid', $user->uuid)->count(),
+            'unread_chat_messages'   => ChatMessage()->unread()->where('user_uuid', $user->uuid)->where('sender_type', '!=', 'client')->count(),
         ]);
+    }
+
+    public function completeHomeTour()
+    {
+        $user = auth()->user();
+        $user->update(['is_home_tour_completed' => true]);
+
+        activity_log(log: 'API Dashboard', event: 'home_tour_completed', subject: $user);
+
+        return jsonResponse(true, __('api.home_tour_completed'));
     }
 }

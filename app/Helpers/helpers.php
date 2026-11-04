@@ -312,13 +312,17 @@ if (!function_exists('sendNotification')) {
         if (!is_array($tokens)) {
             $tokens = [$tokens];
         }
-        // Path to your Firebase service account JSON file
-        $credentialsPath = base_path('2m1k-213e7-firebase-adminsdk-fbsvc-f45dd7b09b.json');
+        // Path to your Firebase service account JSON file (FIREBASE_CREDENTIALS is relative to the project root)
+        $credentialsPath = base_path(env('FIREBASE_CREDENTIALS', '2m1k-213e7-firebase-adminsdk-fbsvc-f45dd7b09b.json'));
+        if (!is_file($credentialsPath)) {
+            \Log::warning('FCM credentials file not found, push skipped', ['path' => $credentialsPath]);
+            return false;
+        }
 
         // Generate an OAuth2 access token
         $accessToken = getAccessToken($credentialsPath);
         // Firebase Cloud Messaging API URL
-        $url = 'https://fcm.googleapis.com/v1/projects/men1kitchen/messages:send';
+        $url = 'https://fcm.googleapis.com/v1/projects/' . env('FIREBASE_PROJECT_ID', 'men1kitchen') . '/messages:send';
         $responses  = [];
         foreach ($tokens as $token) {
 
@@ -521,5 +525,98 @@ if (!function_exists('onboarding_chapter_categories')) {
         }
 
         return $map[$chapter] ?? [];
+    }
+}
+
+if (!function_exists('notifyUser')) {
+    /**
+     * Store an in-app notification and push it to the user's devices.
+     * $options: badge, action, data (array), dedupe_key (skip if already sent), push (bool, default true),
+     *           store (bool, default true - false only pushes, e.g. chat messages)
+     */
+    function notifyUser($user, string $type, string $title, ?string $body = null, array $options = [])
+    {
+        $dedupeKey = $options['dedupe_key'] ?? null;
+        if ($dedupeKey && AppNotification()->where('user_uuid', $user->uuid)->where('dedupe_key', $dedupeKey)->exists()) {
+            return null;
+        }
+
+        $notification = AppNotification()->newInstance([
+            'user_uuid'  => $user->uuid,
+            'type'       => $type,
+            'title'      => $title,
+            'body'       => $body,
+            'badge'      => $options['badge'] ?? null,
+            'action'     => $options['action'] ?? null,
+            'data'       => $options['data'] ?? null,
+            'dedupe_key' => $dedupeKey,
+        ]);
+        if ($options['store'] ?? true) {
+            $notification->save();
+        }
+
+        if (($options['push'] ?? true) && $user->push_notification) {
+            try {
+                $tokens = UserFcmToken()->where('user_uuid', $user->uuid)->pluck('fcm_token')->toArray();
+                // FCM data payload values must be strings
+                $payload = collect(array_merge($options['data'] ?? [], [
+                    'type'              => $type,
+                    'action'            => $options['action'] ?? '',
+                    'notification_uuid' => (string) $notification->uuid,
+                ]))->map(fn ($v) => is_scalar($v) ? (string) $v : json_encode($v))->all();
+
+                sendNotification($tokens, $title, (string) $body, $payload);
+            } catch (\Throwable $e) {
+                Log::error('Push notification failed: ' . $e->getMessage(), ['user_uuid' => $user->uuid, 'type' => $type]);
+            }
+        }
+
+        return $notification;
+    }
+}
+
+if (!function_exists('uploadFiles')) {
+    /**
+     * Upload many files to the public disk, returns the stored paths ("<folder>/<file>").
+     */
+    function uploadFiles($files, string $folderName): array
+    {
+        $paths = [];
+        foreach ((array) $files as $file) {
+            if ($file && ($path = uploadFile($file, $folderName))) {
+                $paths[] = $path;
+            }
+        }
+
+        return $paths;
+    }
+}
+
+if (!function_exists('deleteFiles')) {
+    function deleteFiles($paths): void
+    {
+        foreach (array_filter((array) $paths) as $path) {
+            Storage::disk('public')->delete('uploads/' . $path);
+        }
+    }
+}
+
+if (!function_exists('fileUrls')) {
+    function fileUrls($paths): array
+    {
+        return array_values(array_map(fn ($path) => getFileUrl($path), array_filter((array) $paths)));
+    }
+}
+
+if (!function_exists('filesPayload')) {
+    /**
+     * Stored paths -> [{path, url}] (path is what the app sends back in remove_photos[]).
+     */
+    function filesPayload($paths): array
+    {
+        return array_values(array_map(
+            fn ($path) => ['path' => $path, 'url' => getFileUrl($path)],
+            array_filter((array) $paths)
+        ));
     }
 }
