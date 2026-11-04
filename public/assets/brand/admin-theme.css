@@ -818,3 +818,22 @@ body.dark-mode .dd-chat-send { color: #1b1617; }
 .dd-profile-btn .fe-chevron-down { transition: transform .2s ease; }
 .dd-profile-btn[aria-expanded="true"] .fe-chevron-down { transform: rotate(180deg); }
 .min-w-0 { min-width: 0; }
+
+/* ---------- Sidebar in dark mode (beats Sash's .dark-mode .side-menu__item rules) ---------- */
+body.dark-mode .side-menu .side-menu__item { color: var(--dd-ink-2) !important; }
+body.dark-mode .side-menu .side-menu__item .side-menu__icon { color: var(--dd-muted) !important; }
+body.dark-mode .side-menu .side-menu__item:hover,
+body.dark-mode .side-menu .side-menu__item:focus { background: var(--dd-primary-soft) !important; color: var(--dd-primary) !important; }
+body.dark-mode .side-menu .side-menu__item:hover .side-menu__icon,
+body.dark-mode .side-menu .side-menu__item:hover .side-menu__label,
+body.dark-mode .side-menu .side-menu__item:focus .side-menu__icon,
+body.dark-mode .side-menu .side-menu__item:focus .side-menu__label { color: var(--dd-primary) !important; }
+body.dark-mode .side-menu .side-menu__item.active,
+body.dark-mode .side-menu .side-menu__item.active:hover,
+body.dark-mode .side-menu .side-menu__item.active .side-menu__label,
+body.dark-mode .side-menu .side-menu__item.active .side-menu__icon,
+body.dark-mode .side-menu .side-menu__item.active .angle { color: #1b1617 !important; }
+body.dark-mode .side-menu .side-menu__item.active { background: var(--dd-primary) !important; }
+body.dark-mode .side-menu .side-menu__item.active .side-menu__icon { background: rgba(27, 22, 23, .14); }
+body.dark-mode .slide-item { color: var(--dd-muted) !important; }
+body.dark-mode .slide-item:hover, body.dark-mode .slide-item.active { color: var(--dd-primary) !important; }
