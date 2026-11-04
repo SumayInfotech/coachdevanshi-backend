@@ -789,7 +789,8 @@ body.dark-mode .dd-chat-send { color: #1b1617; }
    Header profile menu
    ========================================================================== */
 .header .profile-1 .dropdown-menu.dd-profile-menu {
-    width: 272px; min-width: 272px; padding: 0 !important; margin-top: 10px !important;
+    width: 272px; min-width: 272px; padding: 0 !important;
+    top: 0 !important; margin-top: 8px !important; /* Sash adds top:56px on top of Popper's own offset */
     overflow: hidden; border-radius: 16px !important;
 }
 .dd-profile-head { display: flex; align-items: center; gap: 12px; padding: 16px; background: linear-gradient(135deg, var(--dd-blush-soft), var(--dd-sage-soft)); border-bottom: 1px solid var(--dd-line); }
