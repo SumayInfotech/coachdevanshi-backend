@@ -51,27 +51,36 @@
                         </span>
                         <i class="fe fe-chevron-down text-muted d-none d-sm-inline"></i>
                     </a>
-                    <div class="dropdown-menu dropdown-menu-end">
-                        <div class="drop-heading">
-                            <div class="fw-semibold" style="color: var(--dd-ink)">{{ $headerName }}</div>
-                            @if(!empty($data->email))
-                                <div class="small text-muted">{{ $data->email }}</div>
+                    <div class="dropdown-menu dropdown-menu-end dd-profile-menu">
+                        <div class="dd-profile-head">
+                            @if($data->profile_image)
+                                <img src="{{ getFileUrl($data->profile_image) }}" alt="profile" class="dd-profile-head-avatar">
+                            @else
+                                <span class="dd-avatar-initials dd-profile-head-avatar">{{ $initials }}</span>
                             @endif
-                            @if(!empty($data->mobile))
-                                <div class="small text-muted">{{ $data->mobile }}</div>
-                            @endif
+                            <div class="min-w-0">
+                                <div class="dd-profile-head-name">{{ $headerName }}</div>
+                                @if(!empty($data->email))
+                                    <div class="dd-profile-head-sub">{{ $data->email }}</div>
+                                @elseif(!empty($data->mobile))
+                                    <div class="dd-profile-head-sub">{{ $data->mobile }}</div>
+                                @endif
+                                <span class="dd-profile-role-pill">{{ str_replace('_', ' ', $headerRole ?? 'Admin') }}</span>
+                            </div>
                         </div>
-                        <div class="dropdown-divider my-1"></div>
-                        <a class="dropdown-item" href="{{ route('admin.user.view', $data->uuid) }}">
-                            <i class="dropdown-icon fe fe-user"></i> {{ __('header.profile') }}
-                        </a>
-                        <a class="dropdown-item" href="{{ route('admin.change-password') }}">
-                            <i class="dropdown-icon fe fe-lock"></i> {{ __('header.change_password') }}
-                        </a>
-                        <div class="dropdown-divider my-1"></div>
-                        <a class="dropdown-item" href="{{ route('admin.logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                            <i class="dropdown-icon fe fe-log-out"></i> {{ __('header.logout') }}
-                        </a>
+                        <div class="dd-profile-links">
+                            <a class="dropdown-item" href="{{ route('admin.user.view', $data->uuid) }}">
+                                <i class="fe fe-user"></i><span>{{ __('header.profile') }}</span>
+                            </a>
+                            <a class="dropdown-item" href="{{ route('admin.change-password') }}">
+                                <i class="fe fe-lock"></i><span>{{ __('header.change_password') }}</span>
+                            </a>
+                        </div>
+                        <div class="dd-profile-links dd-profile-links-end">
+                            <a class="dropdown-item dd-logout" href="{{ route('admin.logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                <i class="fe fe-log-out"></i><span>{{ __('header.logout') }}</span>
+                            </a>
+                        </div>
                         <form id="logout-form" action="{{ route('admin.logout') }}" method="GET" class="d-none"></form>
                     </div>
                 </div>
