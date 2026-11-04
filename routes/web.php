@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\MCQController;
 use App\Http\Controllers\Admin\OnboardingMasterController;
 use App\Http\Controllers\Admin\PathwayController;
 use App\Http\Controllers\Admin\ClientController;
+use App\Http\Controllers\Admin\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -83,9 +84,7 @@ Route::prefix('admin')->name('admin.')->middleware(['admin.auth', 'set.language'
         ->name('update-password');
 
     // Dashboard
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard.index');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     /*
     |--------------------------------------------------------------------------

@@ -16,7 +16,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- FAVICON -->
-    <link rel="shortcut icon" type="image/x-icon" href="{{ setting('favicon_icon') ? getFileUrl(setting('favicon_icon')) : asset('assets/sash/images/brand/favicon.ico') }}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ setting('favicon_icon') ? getFileUrl(setting('favicon_icon')) : asset('assets/brand/favicon.png') }}">
 
     <!-- BOOTSTRAP CSS -->
     <link id="style" href="{{ asset('assets/sash/plugins/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
@@ -29,7 +29,8 @@
     <link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="{{ asset('assets/brand/admin-theme.css') }}?v={{ filemtime(public_path('assets/brand/admin-theme.css')) }}" rel="stylesheet">
 
     
     <style>
@@ -48,9 +49,6 @@
             border-top: 1px solid #dee2e6 !important;
             border-bottom: 1px solid #dee2e6 !important;
         }
-        body {
-            font-family: 'Gabarito', sans-serif !important;
-        }
     </style>
     @yield('page-css')
 </head>
@@ -60,7 +58,7 @@
 <!-- GLOBAL LOADER -->
 <div id="global-loader">
     <!-- <img src="{{ asset('assets/sash/images/loader.svg') }}" class="loader-img" alt="Loader"> -->
-    <img src="{{ setting('loader_image') ? getFileUrl(setting('loader_image')) : asset('assets/sash/images/loader.svg') }}" class="loader-img" alt="loader">
+    <img src="{{ asset('assets/brand/icon.png') }}" class="loader-img" alt="loader">
 </div>
 
 <!-- PAGE -->
@@ -86,6 +84,14 @@
     @include('admin.layouts.footer')
 </div>
 <a href="#top" id="back-to-top"><i class="fa fa-angle-up"></i></a>
+<script>
+    // The Sash theme switcher can store its own colours; the brand theme replaces them.
+    try {
+        ['sashprimaryColor', 'sashprimaryHoverColor', 'sashprimaryBorderColor', 'sashdarkPrimary', 'sashcolormenu', 'sashgradientmenu', 'sashdarkmenu', 'sashcolorheader', 'sashgradientheader', 'sashdarkheader', 'sashtransparentMode']
+            .forEach(function (k) { localStorage.removeItem(k); });
+        if (localStorage.getItem('sashdarkMode')) { document.body.classList.add('dark-mode'); document.body.classList.remove('light-mode'); }
+    } catch (e) {}
+</script>
 <!-- JS -->
     <script src="{{ asset('assets/sash/js/jquery.min.js') }}"></script>
 

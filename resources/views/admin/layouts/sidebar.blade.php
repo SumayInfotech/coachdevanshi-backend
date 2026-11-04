@@ -17,35 +17,10 @@
                     alt="logo">
             </a> -->
             <a class="header-brand1" href="{{ route('admin.dashboard') }}">
-
-                <!-- Dark Mode - Full Logo -->
-                <img src="{{ setting('sidebar_logo_dark_full')
-                            ? getFileUrl(setting('sidebar_logo_dark_full'))
-                            : asset('assets/sash/images/brand/logo-white.png') }}"
-                    class="header-brand-img desktop-logo"
-                    alt="logo">
-
-                <!-- Dark Mode - Toggle Logo -->
-                <img src="{{ setting('sidebar_logo_dark_toggle')
-                            ? getFileUrl(setting('sidebar_logo_dark_toggle'))
-                            : asset('assets/sash/images/brand/icon-white.png') }}"
-                    class="header-brand-img toggle-logo"
-                    alt="logo">
-
-                <!-- Light Mode - Toggle Logo -->
-                <img src="{{ setting('sidebar_logo_light_toggle')
-                            ? getFileUrl(setting('sidebar_logo_light_toggle'))
-                            : asset('assets/sash/images/brand/icon-dark.png') }}"
-                    class="header-brand-img light-logo"
-                    alt="logo">
-
-                <!-- Light Mode - Full Logo -->
-                <img src="{{ setting('sidebar_logo_light_full')
-                            ? getFileUrl(setting('sidebar_logo_light_full'))
-                            : asset('assets/sash/images/brand/logo-dark.png') }}"
-                    class="header-brand-img light-logo1"
-                    alt="logo">
-
+                <img src="{{ asset('assets/brand/logo-light.png') }}" class="header-brand-img desktop-logo" alt="Devanshi Doshi">
+                <img src="{{ asset('assets/brand/icon.png') }}" class="header-brand-img toggle-logo" alt="Devanshi Doshi">
+                <img src="{{ asset('assets/brand/icon.png') }}" class="header-brand-img light-logo" alt="Devanshi Doshi">
+                <img src="{{ asset('assets/brand/logo.png') }}" class="header-brand-img light-logo1" alt="Devanshi Doshi">
             </a>
             <!-- LOGO -->
         </div>
@@ -68,6 +43,12 @@
                     </a>
                 </li>
 
+                @if(hasPermission('view_client') || hasPermission('view_pathway') || hasPermission('view_onboarding_master'))
+                <li class="sub-category">
+                   <h3>Coaching</h3>
+                </li>
+                @endif
+
                 <!-- Clients -->
                 @if(hasPermission('view_client'))
                 <li class="slide {{ $currentController === 'ClientController' ? 'is-expanded active' : '' }}">
@@ -75,6 +56,32 @@
                         <i class="side-menu__icon fe fe-heart"></i>
                         <span class="side-menu__label">Clients</span>
                     </a>
+                </li>
+                @endif
+
+                <!-- Pathways -->
+                @if(hasPermission('view_pathway'))
+                <li class="slide {{ $currentController === 'PathwayController' ? 'is-expanded active' : '' }}">
+                    <a class="side-menu__item has-link {{ $currentController === 'PathwayController' ? 'active' : '' }}" href="{{ route('admin.pathways.index') }}">
+                        <i class="side-menu__icon fe fe-compass"></i>
+                        <span class="side-menu__label">Pathways</span>
+                    </a>
+                </li>
+                @endif
+
+                <!-- Onboarding Masters -->
+                @if(hasPermission('view_onboarding_master'))
+                <li class="slide {{ $currentController === 'OnboardingMasterController' ? 'is-expanded active' : '' }}">
+                    <a class="side-menu__item has-link {{ $currentController === 'OnboardingMasterController' ? 'active' : '' }}" href="{{ route('admin.onboarding-masters.index') }}">
+                        <i class="side-menu__icon fe fe-check-square"></i>
+                        <span class="side-menu__label">Onboarding Masters</span>
+                    </a>
+                </li>
+                @endif
+
+                @if(hasPermission('view_user') || hasPermission('view_role') || hasPermission('view_preference') || hasPermission('view_settings'))
+                <li class="sub-category">
+                   <h3>Administration</h3>
                 </li>
                 @endif
 
@@ -124,16 +131,6 @@
                         </ul>
                     </li>
                 @endif
-                <!-- Setting -->
-                @if(hasPermission('view_settings'))
-                <li class="slide {{ $currentController === 'SettingsController' ? 'is-expanded active' : '' }}">
-                    <a class="side-menu__item has-link {{ $currentController === 'SettingsController' ? 'active' : '' }}" href="{{ route('admin.settings') }}">
-                        <i class="side-menu__icon fe fe-settings"></i>
-                        <span class="side-menu__label">{{ __('sidebar.settings') }}</span>
-                    </a>
-                </li>
-                @endif
-
                 <!-- Preference -->
                 @if(hasPermission('view_preference'))
                 <li class="slide {{ $currentController === 'PreferenceController' ? 'is-expanded active' : '' }}">
@@ -144,26 +141,15 @@
                 </li>
                 @endif
 
-                <!-- Onboarding Masters -->
-                @if(hasPermission('view_onboarding_master'))
-                <li class="slide {{ $currentController === 'OnboardingMasterController' ? 'is-expanded active' : '' }}">
-                    <a class="side-menu__item has-link {{ $currentController === 'OnboardingMasterController' ? 'active' : '' }}" href="{{ route('admin.onboarding-masters.index') }}">
-                        <i class="side-menu__icon fe fe-check-square"></i>
-                        <span class="side-menu__label">Onboarding Masters</span>
+                <!-- Setting -->
+                @if(hasPermission('view_settings'))
+                <li class="slide {{ $currentController === 'SettingsController' ? 'is-expanded active' : '' }}">
+                    <a class="side-menu__item has-link {{ $currentController === 'SettingsController' ? 'active' : '' }}" href="{{ route('admin.settings') }}">
+                        <i class="side-menu__icon fe fe-settings"></i>
+                        <span class="side-menu__label">{{ __('sidebar.settings') }}</span>
                     </a>
                 </li>
                 @endif
-
-                <!-- Pathways -->
-                @if(hasPermission('view_pathway'))
-                <li class="slide {{ $currentController === 'PathwayController' ? 'is-expanded active' : '' }}">
-                    <a class="side-menu__item has-link {{ $currentController === 'PathwayController' ? 'active' : '' }}" href="{{ route('admin.pathways.index') }}">
-                        <i class="side-menu__icon fe fe-compass"></i>
-                        <span class="side-menu__label">Pathways</span>
-                    </a>
-                </li>
-                @endif
-
 
                 <!-- Ingredients -->
                 @if(hasPermission('view_ingredients'))
@@ -228,7 +214,12 @@
 
 
             </ul>
-             
+
+            <div class="dd-side-card">
+                <div class="dd-side-title">Devanshi Doshi</div>
+                <p>Holistic inch-loss coaching. &ldquo;Small, grounded rituals build sustainable nourishment.&rdquo;</p>
+            </div>
+
             <div class="slide-right" id="slide-right"><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191"
                     width="24" height="24" viewBox="0 0 24 24">
                     <path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z" />
