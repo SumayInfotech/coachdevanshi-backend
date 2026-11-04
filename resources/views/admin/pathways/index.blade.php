@@ -77,23 +77,25 @@
             </div>
             <div class="modal-body">
                 <div class="row align-items-start">
-                    <div class="col-md-4 text-center mb-3">
-                        <img id="pathway-image" src="" alt="Pathway image" class="img-fluid rounded border p-1" style="max-height:200px;display:none;">
-                        <div id="pathway-no-image" class="p-4 bg-light rounded text-muted border" style="display:none;">
-                            <i class="fa fa-image fa-3x mb-2 text-muted"></i>
-                            <p class="mb-0 small">No image uploaded</p>
+                    <div class="col-md-4 mb-3">
+                        <div class="dd-media">
+                            <img id="pathway-image" src="" alt="Pathway image" style="display:none;">
+                            <div id="pathway-no-image" class="dd-media-empty" style="display:none;">
+                                <i class="fe fe-image"></i>
+                                <span>No image uploaded</span>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-8">
-                        <table class="table table-bordered mb-0">
-                            <tr><th width="160" class="bg-light">Title</th><td id="pathway-title" class="font-weight-bold text-primary"></td></tr>
-                            <tr><th class="bg-light">Group</th><td id="pathway-group"></td></tr>
-                            <tr><th class="bg-light">Description</th><td id="pathway-description"></td></tr>
-                            <tr><th class="bg-light">Tags</th><td id="pathway-tags"></td></tr>
-                            <tr><th class="bg-light">Protocol Form</th><td id="pathway-protocol"></td></tr>
-                            <tr><th class="bg-light">Clients</th><td id="pathway-clients"></td></tr>
-                            <tr><th class="bg-light">Status</th><td id="pathway-status"></td></tr>
-                            <tr><th class="bg-light">Created At</th><td id="pathway-created-at"></td></tr>
+                        <table class="table dd-detail-table mb-0">
+                            <tr><th width="150">Title</th><td id="pathway-title" class="font-weight-bold text-primary"></td></tr>
+                            <tr><th>Group</th><td id="pathway-group"></td></tr>
+                            <tr><th>Description</th><td id="pathway-description"></td></tr>
+                            <tr><th>Tags</th><td id="pathway-tags"></td></tr>
+                            <tr><th>Protocol Form</th><td id="pathway-protocol"></td></tr>
+                            <tr><th>Clients</th><td id="pathway-clients"></td></tr>
+                            <tr><th>Status</th><td id="pathway-status"></td></tr>
+                            <tr><th>Created At</th><td id="pathway-created-at"></td></tr>
                         </table>
                     </div>
                 </div>

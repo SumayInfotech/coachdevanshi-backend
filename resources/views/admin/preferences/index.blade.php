@@ -131,14 +131,17 @@
             </div>
             <div class="modal-body">
                 <div class="row">
-                    <div class="col-md-4 text-center mb-3">
-                        <img id="preference-image"
-                             src=""
-                             class="img-fluid rounded"
-                             style="max-height:200px; display:none;">
+                    <div class="col-md-4 mb-3">
+                        <div class="dd-media">
+                            <img id="preference-image" src="" alt="Preference image" style="display:none;">
+                            <div id="preference-no-image" class="dd-media-empty" style="display:none;">
+                                <i class="fe fe-image"></i>
+                                <span>No image uploaded</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-md-8">
-                        <table class="table table-bordered">
+                        <table class="table dd-detail-table mb-0">
                             <tr>
                                 <th width="150">Title</th>
                                 <td id="preference-title"></td>
@@ -225,8 +228,10 @@
                             $('#preference-image')
                                 .attr('src', response.data.image)
                                 .show();
+                            $('#preference-no-image').hide();
                         } else {
                             $('#preference-image').hide();
+                            $('#preference-no-image').show();
                         }
                         $('#viewPreferenceModal').modal('show');
                     }

@@ -109,19 +109,17 @@
             </div>
             <div class="modal-body">
                 <div class="row align-items-start">
-                    <div class="col-md-4 text-center mb-3">
-                        <img id="master-image"
-                             src=""
-                             alt="Master Icon/Image"
-                             class="img-fluid rounded border p-1"
-                             style="max-height: 200px; max-width: 100%; display: none;">
-                        <div id="master-no-image" class="p-4 bg-light rounded text-muted border" style="display:none;">
-                            <i class="fa fa-image fa-3x mb-2 text-muted"></i>
-                            <p class="mb-0 small">No image uploaded</p>
+                    <div class="col-md-4 mb-3">
+                        <div class="dd-media">
+                            <img id="master-image" src="" alt="Master icon/image" style="display:none;">
+                            <div id="master-no-image" class="dd-media-empty" style="display:none;">
+                                <i class="fe fe-image"></i>
+                                <span>No image uploaded</span>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-8">
-                        <table class="table table-bordered mb-0">
+                        <table class="table dd-detail-table mb-0">
                             <tr>
                                 <th width="160" class="bg-light">Category</th>
                                 <td id="master-category" class="font-weight-semibold"></td>

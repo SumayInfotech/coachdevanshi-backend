@@ -478,8 +478,8 @@
                     <div class="row">
                         @foreach(config('tracking.food_diary_days') as $number => $day)
                             @php $entry = $foodDiary->firstWhere('day_number', $number); @endphp
-                            <div class="col-lg-4">
-                                <div class="border rounded p-3 mb-3 h-100">
+                            <div class="col-lg-4 mb-3">
+                                <div class="border rounded p-3 h-100">
                                     <h6>{{ $day['label'] }} <small class="text-muted">({{ ucfirst($day['day_type']) }})</small></h6>
                                     @if($entry)
                                         <div class="small text-muted mb-2">{{ $entry->record_date->format('d M Y') }}</div>
@@ -519,22 +519,29 @@
                 {{-- CHAT --}}
                 @if($chatPermission)
                     <div class="tab-pane fade" id="tab-chat" role="tabpanel">
-                        <div id="chatMessages" class="border rounded p-3 mb-3 bg-light" style="height:420px;overflow-y:auto;">
-                            <p class="text-muted text-center">Loading messages...</p>
-                        </div>
-                        <form id="chatForm" enctype="multipart/form-data">
-                            <div class="d-flex gap-2">
-                                <textarea name="message" id="chatMessage" rows="2" class="form-control" placeholder="Reply to {{ $client->nickname ?: $client->name }}..."></textarea>
-                                <div class="d-flex flex-column gap-1">
-                                    <label class="btn btn-outline-secondary btn-sm mb-0" title="Attach photos">
-                                        <i class="fe fe-image"></i>
-                                        <input type="file" name="attachments[]" id="chatAttachments" accept="image/*" multiple hidden>
-                                    </label>
-                                    <button type="submit" class="btn btn-primary btn-sm" id="chatSend"><i class="fe fe-send"></i></button>
+                        <div class="dd-chat">
+                            <div class="dd-chat-head">
+                                <span class="dd-list-avatar">{{ mb_strtoupper(mb_substr($client->name ?? 'C', 0, 1)) }}</span>
+                                <div>
+                                    <div class="dd-list-title">{{ trim(($client->name ?? '') . ' ' . ($client->last_name ?? '')) ?: 'Client' }}</div>
+                                    <div class="dd-list-sub">Coach chat · new messages appear automatically</div>
                                 </div>
                             </div>
-                            <small class="text-muted" id="chatAttachmentInfo"></small>
-                        </form>
+                            <div id="chatMessages" class="dd-chat-body">
+                                <div class="dd-chat-empty"><i class="fe fe-loader"></i>Loading messages...</div>
+                            </div>
+                            <form id="chatForm" class="dd-chat-composer" enctype="multipart/form-data">
+                                <label class="dd-chat-btn" title="Attach photos">
+                                    <i class="fe fe-image"></i>
+                                    <input type="file" name="attachments[]" id="chatAttachments" accept="image/*" multiple hidden>
+                                </label>
+                                <div class="flex-grow-1">
+                                    <textarea name="message" id="chatMessage" rows="1" class="form-control" placeholder="Reply to {{ $client->nickname ?: $client->name }}..."></textarea>
+                                    <small class="text-muted d-block mt-1" id="chatAttachmentInfo"></small>
+                                </div>
+                                <button type="submit" class="dd-chat-btn dd-chat-send" id="chatSend" title="Send"><i class="fe fe-send"></i></button>
+                            </form>
+                        </div>
                     </div>
                 @endif
             </div>
@@ -574,17 +581,16 @@ $(document).ready(function () {
     let lastId = 0;
 
     function bubble(m) {
-        const mine = m.sender_type === 'coach';
-        const system = m.sender_type === 'system';
+        // m.message is HTML-escaped by the server
+        const type = m.sender_type === 'coach' ? 'mine' : (m.sender_type === 'system' ? 'system' : 'theirs');
         const photos = (m.attachments || []).map(url =>
-            '<a href="' + url + '" target="_blank"><img src="' + url + '" alt="Attachment" width="90" height="90" class="rounded border me-1 mt-1" style="object-fit:cover;"></a>'
+            '<a href="' + url + '" target="_blank"><img src="' + url + '" alt="Attachment" class="dd-chat-photo"></a>'
         ).join('');
-        return '<div class="d-flex mb-2 ' + (mine ? 'justify-content-end' : 'justify-content-start') + '">'
-            + '<div class="p-2 rounded ' + (system ? 'bg-warning-transparent' : (mine ? 'bg-primary text-white' : 'bg-white border')) + '" style="max-width:70%">'
-            + '<div class="small fw-semibold">' + $('<div>').text(m.sender_name).html() + '</div>'
-            + (m.message ? '<div style="white-space:pre-wrap">' + m.message + '</div>' : '')
-            + photos
-            + '<div class="small opacity-75 text-end">' + m.created_at + '</div>'
+        return '<div class="dd-msg ' + type + '"><div class="dd-bubble">'
+            + (type === 'mine' ? '' : '<div class="dd-msg-name">' + $('<div>').text(m.sender_name).html() + '</div>')
+            + (m.message ? '<div class="dd-msg-text">' + m.message + '</div>' : '')
+            + (photos ? '<div class="dd-msg-photos">' + photos + '</div>' : '')
+            + '<div class="dd-msg-time">' + m.created_at + '</div>'
             + '</div></div>';
     }
 
@@ -593,7 +599,7 @@ $(document).ready(function () {
             if (!response.success) return;
             if (initial) $box.empty();
             if (initial && !response.data.length) {
-                $box.html('<p class="text-muted text-center" id="chatEmpty">No messages yet.</p>');
+                $box.html('<div class="dd-chat-empty" id="chatEmpty"><i class="fe fe-message-circle"></i>No messages yet. Say hello to start the conversation.</div>');
             }
             if (response.data.length) {
                 $('#chatEmpty').remove();
@@ -603,14 +609,20 @@ $(document).ready(function () {
         });
     }
 
-    $('#clientTabs a[href="#tab-chat"]').one('shown.bs.tab', function () {
-        loadMessages(true);
-        setInterval(function () { loadMessages(false); }, 15000);
-    });
-    if (window.location.hash === '#tab-chat') {
+    let chatStarted = false;
+    function startChat() {
+        if (chatStarted) return;
+        chatStarted = true;
         loadMessages(true);
         setInterval(function () { loadMessages(false); }, 15000);
     }
+    $('#clientTabs a[href="#tab-chat"]').on('shown.bs.tab', startChat);
+    if (window.location.hash === '#tab-chat') startChat();
+
+    // Enter sends, Shift+Enter adds a new line
+    $('#chatMessage').on('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#chatForm').trigger('submit'); }
+    });
 
     $('#chatAttachments').on('change', function () {
         $('#chatAttachmentInfo').text(this.files.length ? this.files.length + ' photo(s) attached' : '');
