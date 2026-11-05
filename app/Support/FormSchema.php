@@ -2,7 +2,9 @@
 
 namespace App\Support;
 
+use App\Models\City;
 use App\Models\OnboardingMaster;
+use App\Models\State;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -39,7 +41,7 @@ class FormSchema
             return [$answers, $validator->errors()->first()];
         }
 
-        $error = self::validateMasterOptions($fields, $answers);
+        $error = self::validateMasterOptions($fields, $answers) ?? self::validateLocations($fields, $answers);
 
         return [$answers, $error];
     }
@@ -62,6 +64,9 @@ class FormSchema
             if (isset($field['required_if'])) {
                 $item['required_if'] = ['field' => $field['required_if'][0], 'value' => $field['required_if'][1]];
             }
+            if (isset($field['required_with'])) {
+                $item['required_with'] = $field['required_with'];
+            }
             foreach (['min', 'max'] as $limit) {
                 if (isset($field[$limit])) {
                     $item[$limit] = $field[$limit];
@@ -72,6 +77,13 @@ class FormSchema
             }
             if (in_array($field['type'], ['group', 'repeater'])) {
                 $item['fields'] = self::describe($field['fields']);
+            }
+            if ($field['type'] === 'state') {
+                $item['source'] = 'get-location';
+            }
+            if ($field['type'] === 'city') {
+                $item['source'] = 'get-location?state_id={' . $field['state_field'] . '}';
+                $item['depends_on'] = $field['state_field'];
             }
             $out[] = $item;
         }
@@ -120,6 +132,12 @@ class FormSchema
                 case 'list':
                     $row['value'] = is_array($value) && $value ? implode(' | ', $value) : null;
                     break;
+                case 'state':
+                    $row['value'] = is_numeric($value) ? (State::whereKey($value)->value('name') ?? (string) $value) : null;
+                    break;
+                case 'city':
+                    $row['value'] = is_numeric($value) ? (City::whereKey($value)->value('name') ?? (string) $value) : null;
+                    break;
                 default:
                     $row['value'] = is_scalar($value) ? (string) $value : null;
             }
@@ -159,6 +177,12 @@ class FormSchema
                 case 'number':
                     if (is_string($value) && is_numeric($value)) {
                         $value = $value + 0;
+                    }
+                    break;
+                case 'state':
+                case 'city':
+                    if (is_string($value) && ctype_digit($value)) {
+                        $value = (int) $value;
                     }
                     break;
                 case 'multi':
@@ -202,6 +226,8 @@ class FormSchema
                 [$other, $expected] = $field['required_if'];
                 $expected = is_bool($expected) ? ($expected ? 'true' : 'false') : $expected;
                 $presence = 'required_if:' . $prefix . $other . ',' . $expected;
+            } elseif (!$draft && isset($field['required_with'])) {
+                $presence = 'required_with:' . $prefix . $field['required_with'];
             }
 
             $type = [];
@@ -235,6 +261,12 @@ class FormSchema
                     break;
                 case 'boolean':
                     $type = ['boolean'];
+                    break;
+                case 'state':
+                    $type = ['integer', Rule::exists('states', 'id')->where('status', 'Active')];
+                    break;
+                case 'city':
+                    $type = ['integer', Rule::exists('cities', 'id')];
                     break;
                 case 'single':
                     $type = isset($field['options']) ? [Rule::in(array_map('strval', array_keys($field['options'])))] : ['string', 'max:64'];
@@ -292,6 +324,28 @@ class FormSchema
                 if (!in_array($selected, $valid, true)) {
                     return __('api.invalid_option_selected', ['field' => strtolower($field['label'] ?? formatName($key))]);
                 }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Ensure each city answer belongs to the state chosen in its 'state_field'.
+     */
+    protected static function validateLocations(array $fields, array $answers): ?string
+    {
+        foreach ($fields as $key => $field) {
+            if ($field['type'] !== 'city' || empty($field['state_field'])) {
+                continue;
+            }
+            $city = $answers[$key] ?? null;
+            $state = $answers[$field['state_field']] ?? null;
+            if (is_null($city)) {
+                continue;
+            }
+            if (is_null($state) || !City::whereKey($city)->where('state_id', $state)->exists()) {
+                return __('api.invalid_option_selected', ['field' => strtolower($field['label'] ?? formatName($key))]);
             }
         }
 

@@ -8,8 +8,11 @@
 |   text, textarea, email, number, date, time, boolean,
 |   single / multi  (options from 'master' => onboarding_masters.category, or inline 'options'),
 |   group           (nested 'fields', stored as an object),
-|   repeater        (list of objects with nested 'fields').
+|   repeater        (list of objects with nested 'fields'),
+|   state / city    (states.id / cities.id; options come from GET get-location,
+|                    a city's 'state_field' names the state field it must belong to).
 | 'master' option values are onboarding_masters.uuid.
+| 'required_if' => [field, value] / 'required_with' => field make a field conditionally required.
 */
 
 return [
@@ -31,8 +34,9 @@ return [
                     'male'                 => 'Male',
                     'prefer_not_to_answer' => 'Prefer not to answer',
                 ]],
-                'city'             => ['label' => 'City', 'type' => 'text', 'required' => true],
                 'country'          => ['label' => 'Country', 'type' => 'text', 'required' => true],
+                'state_id'         => ['label' => 'State', 'type' => 'state', 'required' => true],
+                'city_id'          => ['label' => 'City', 'type' => 'city', 'state_field' => 'state_id', 'required' => true],
                 'timezone'         => ['label' => 'Time zone', 'type' => 'text', 'max' => 64, 'required' => true],
                 'daily_rhythm'     => ['label' => 'Your daily rhythm', 'type' => 'textarea', 'min' => 50, 'required' => true],
                 'coaching_journey' => ['label' => 'Which coaching journey are you joining?', 'type' => 'single', 'master' => 'coaching_journey', 'required' => true],
@@ -45,6 +49,8 @@ return [
             'fields'   => [
                 'height'              => ['label' => 'Current height', 'type' => 'number', 'min' => 1, 'max' => 300, 'required' => true],
                 'height_unit'         => ['label' => 'Height unit', 'type' => 'single', 'required' => true, 'options' => ['cm' => 'cm', 'ft_in' => 'Feet & inches']],
+                'weight'              => ['label' => 'Current weight', 'type' => 'number', 'min' => 1, 'max' => 500, 'required' => true],
+                'weight_unit'         => ['label' => 'Weight unit', 'type' => 'single', 'required' => true, 'options' => ['kg' => 'Kilograms (kg)', 'lbs' => 'Pounds (lbs)']],
                 'approaches_tried'    => ['label' => 'Approaches you have tried', 'type' => 'multi', 'master' => 'approaches_tried', 'required' => true],
                 'approaches_learning' => ['label' => 'What did you understand or learn from those experiences?', 'type' => 'textarea'],
                 'confident_areas'     => ['label' => 'Which areas do you already feel confident about?', 'type' => 'multi', 'master' => 'confident_areas', 'required' => true],

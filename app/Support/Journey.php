@@ -101,11 +101,27 @@ class Journey
     }
 
     /**
-     * Weight entries from daily and weekly check-ins, oldest first. Weekly wins on the same date.
+     * Weight entries from onboarding (chapter 2 starting weight) and daily / weekly check-ins, oldest first.
+     * On the same date a check-in replaces the onboarding weight, and weekly wins over daily.
      */
     public static function weightSeries($user, ?string $from = null, ?string $to = null): array
     {
         $series = [];
+
+        $onboarding = UserOnboardingChapter()->where('user_uuid', $user->uuid)->where('chapter', 2)->first();
+        $start = $onboarding?->answers ?? [];
+        if (is_numeric($start['weight'] ?? null)) {
+            $date = CarbonImmutable::parse($onboarding->completed_at ?? $onboarding->updated_at)->setTimezone(self::timezone($user))->toDateString();
+            if ((!$from || $date >= $from) && (!$to || $date <= $to)) {
+                $series[$date] = [
+                    'date'   => $date,
+                    'weight' => (float) $start['weight'],
+                    'unit'   => $start['weight_unit'] ?? null,
+                    'source' => 'onboarding',
+                ];
+            }
+        }
+
         foreach ([['daily', DailyCheckin()], ['weekly', WeeklyCheckin()]] as [$source, $model]) {
             $query = $model->where('user_uuid', $user->uuid)->whereNotNull('weight');
             if ($from) {
@@ -146,6 +162,8 @@ class Journey
             'current'     => $latest['weight'],
             'unit'        => $latest['unit'],
             'recorded_on' => $latest['date'],
+            'source'      => $latest['source'],
+            'is_recorded_today' => $latest['date'] === self::today($user)->toDateString(),
             'change'      => $change,
             'trend'       => is_null($change) ? null : ($change > 0 ? 'gained' : ($change < 0 ? 'lost' : 'same')),
         ];

@@ -1113,6 +1113,7 @@
                                     "});",
                                     "var json = pm.response.json();",
                                     "if (json.success) {",
+                                    "    try { var v = json.data[0].id; if (v) { pm.collectionVariables.set(\"city_id\", v); } } catch (e) {}",
                                     "}"
                                 ],
                                 "type": "text/javascript"
@@ -1248,6 +1249,11 @@
                                     "});",
                                     "var json = pm.response.json();",
                                     "if (json.success) {",
+                                    "    pm.test(\"dashboard has the home cards\", function () {",
+                                    "        pm.expect(json.data).to.include.keys(\"greeting\", \"name\", \"date_label\", \"quote\", \"plan\", \"coach_note\", \"today_overview\", \"checkins\", \"unread_notifications\");",
+                                    "        pm.expect(json.data.today_overview).to.have.property(\"weight\");",
+                                    "        pm.expect(json.data.checkins.micro).to.have.property(\"status\");",
+                                    "    });",
                                     "}"
                                 ],
                                 "type": "text/javascript"
@@ -1284,7 +1290,7 @@
                                 "dashboard"
                             ]
                         },
-                        "description": "Greeting, plan validity card (days_left, progress_percent, show_renewal_cta), latest coach note, today's overview (steps from health sync, weight + change since last entry), micro / weekly / baseline check-in status, calendar strip (current week), onboarding & pathway status, unread notification and chat counts."
+                        "description": "Greeting, plan validity card (days_left, progress_percent, show_renewal_cta), latest coach note, today's overview (steps from health sync, weight card: latest entry with change since the previous one; before any check-in it shows the onboarding chapter 2 weight (source: onboarding), is_recorded_today drives the Add Now button), micro / weekly / baseline check-in status, calendar strip (current week), onboarding & pathway status, unread notification and chat counts."
                     },
                     "response": []
                 },
@@ -1537,6 +1543,18 @@
                     "name": "Save Chapter 1",
                     "event": [
                         {
+                            "listen": "prerequest",
+                            "script": {
+                                "exec": [
+                                    "if (!pm.collectionVariables.get(\"state_id\") || !pm.collectionVariables.get(\"city_id\")) {",
+                                    "    console.log(\"Save Chapter 1 skipped: state_id / city_id is empty (run Get States and Get Cities of a State first)\");",
+                                    "    pm.execution.skipRequest();",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        },
+                        {
                             "listen": "test",
                             "script": {
                                 "exec": [
@@ -1592,10 +1610,10 @@
                                 "1"
                             ]
                         },
-                        "description": "Completes chapter 1. nickname, dob, gender, city, country and timezone are mirrored on the profile.",
+                        "description": "Completes chapter 1. state_id / city_id are ids from GET get-location (the city must belong to the state). nickname, dob, gender, country, state_id, city_id (plus city_name) and timezone are mirrored on the profile.",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"answers\": {\n        \"email\": \"{{email}}\",\n        \"full_name\": \"Ananya Sharma\",\n        \"nickname\": \"Anu\",\n        \"phone_code\": \"{{phone_code}}\",\n        \"mobile\": \"{{mobile}}\",\n        \"dob\": \"1995-06-15\",\n        \"gender\": \"female\",\n        \"city\": \"Ahmedabad\",\n        \"country\": \"India\",\n        \"timezone\": \"Asia/Kolkata\",\n        \"daily_rhythm\": \"I work a hybrid job 9:30-6:30 with a commute on weekdays. Usually wake up by 6:30 AM.\",\n        \"coaching_journey\": \"{{opt_coaching_journey}}\"\n    }\n}",
+                            "raw": "{\n    \"answers\": {\n        \"email\": \"{{email}}\",\n        \"full_name\": \"Ananya Sharma\",\n        \"nickname\": \"Anu\",\n        \"phone_code\": \"{{phone_code}}\",\n        \"mobile\": \"{{mobile}}\",\n        \"dob\": \"1995-06-15\",\n        \"gender\": \"female\",\n        \"country\": \"India\",\n        \"state_id\": \"{{state_id}}\",\n        \"city_id\": \"{{city_id}}\",\n        \"timezone\": \"Asia/Kolkata\",\n        \"daily_rhythm\": \"I work a hybrid job 9:30-6:30 with a commute on weekdays. Usually wake up by 6:30 AM.\",\n        \"coaching_journey\": \"{{opt_coaching_journey}}\"\n    }\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -1799,10 +1817,10 @@
                                 "2"
                             ]
                         },
-                        "description": "Completes chapter 2.",
+                        "description": "Completes chapter 2. weight (1-500) and weight_unit (kg | lbs) are required.",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"answers\": {\n        \"height\": 165,\n        \"height_unit\": \"cm\",\n        \"approaches_tried\": [\n            \"{{opt_approaches_tried}}\"\n        ],\n        \"approaches_learning\": \"Extreme restriction leads to fatigue.\",\n        \"confident_areas\": [\n            \"{{opt_confident_areas}}\"\n        ],\n        \"confusing_areas\": \"Balancing evening meals when working late.\",\n        \"what_helped\": \"Accountability and structured groceries.\"\n    }\n}",
+                            "raw": "{\n    \"answers\": {\n        \"height\": 165,\n        \"height_unit\": \"cm\",\n        \"weight\": 64.5,\n        \"weight_unit\": \"kg\",\n        \"approaches_tried\": [\n            \"{{opt_approaches_tried}}\"\n        ],\n        \"approaches_learning\": \"Extreme restriction leads to fatigue.\",\n        \"confident_areas\": [\n            \"{{opt_confident_areas}}\"\n        ],\n        \"confusing_areas\": \"Balancing evening meals when working late.\",\n        \"what_helped\": \"Accountability and structured groceries.\"\n    }\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -1934,10 +1952,10 @@
                                 "3"
                             ]
                         },
-                        "description": "Example with a repeater (medications) and required_if fields.",
+                        "description": "Example with a repeater (medications) and required_if fields. movement_limitation_details is the optional \"Details\" text under the movement limitations question.",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"answers\": {\n        \"medical_diagnoses\": [\n            \"{{opt_medical_diagnoses}}\"\n        ],\n        \"family_medical_history\": [\n            \"{{opt_family_medical_history}}\"\n        ],\n        \"taking_medications\": true,\n        \"medications\": [\n            {\n                \"name\": \"Levothyroxine\",\n                \"dose\": \"50 mcg\",\n                \"frequency\": \"Once daily, morning\",\n                \"reason\": \"Hypothyroidism management\"\n            }\n        ],\n        \"has_movement_limitations\": false,\n        \"has_physician_restrictions\": true,\n        \"physician_guidance\": \"Moderate sodium intake.\",\n        \"recent_clinical_symptoms\": [\n            \"{{opt_recent_clinical_symptoms}}\"\n        ],\n        \"allergies_intolerances\": \"{{opt_allergies_intolerances}}\",\n        \"allergy_details\": \"Cow milk causes bloating.\",\n        \"hormonal_life_stage\": \"{{opt_hormonal_life_stage}}\"\n    }\n}",
+                            "raw": "{\n    \"answers\": {\n        \"medical_diagnoses\": [\n            \"{{opt_medical_diagnoses}}\"\n        ],\n        \"family_medical_history\": [\n            \"{{opt_family_medical_history}}\"\n        ],\n        \"taking_medications\": true,\n        \"medications\": [\n            {\n                \"name\": \"Levothyroxine\",\n                \"dose\": \"50 mcg\",\n                \"frequency\": \"Once daily, morning\",\n                \"reason\": \"Hypothyroidism management\"\n            }\n        ],\n        \"has_movement_limitations\": true,\n        \"movement_limitation_details\": \"Mild lower back stiffness after prolonged sitting.\",\n        \"has_physician_restrictions\": true,\n        \"physician_guidance\": \"Moderate sodium intake.\",\n        \"recent_clinical_symptoms\": [\n            \"{{opt_recent_clinical_symptoms}}\"\n        ],\n        \"allergies_intolerances\": \"{{opt_allergies_intolerances}}\",\n        \"allergy_details\": \"Cow milk causes bloating.\",\n        \"hormonal_life_stage\": \"{{opt_hormonal_life_stage}}\"\n    }\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -5459,6 +5477,11 @@
         },
         {
             "key": "state_id",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "city_id",
             "value": "",
             "type": "string"
         },

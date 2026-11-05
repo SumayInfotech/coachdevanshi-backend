@@ -45,7 +45,7 @@
                         <li class="list-group-item d-flex justify-content-between px-0"><span class="fw-semibold">Email</span><span>{{ $client->email ?? '-' }}</span></li>
                         <li class="list-group-item d-flex justify-content-between px-0"><span class="fw-semibold">Mobile</span><span>{{ trim($client->phone_code . ' ' . $client->mobile) ?: '-' }}</span></li>
                         <li class="list-group-item d-flex justify-content-between px-0"><span class="fw-semibold">Date of birth</span><span>{{ $client->dob?->format('d M Y') ?? '-' }}</span></li>
-                        <li class="list-group-item d-flex justify-content-between px-0"><span class="fw-semibold">Location</span><span>{{ collect([$client->city_name, $client->country_name])->filter()->implode(', ') ?: '-' }}</span></li>
+                        <li class="list-group-item d-flex justify-content-between px-0"><span class="fw-semibold">Location</span><span>{{ collect([$client->city_name, $client->state?->name, $client->country_name])->filter()->implode(', ') ?: '-' }}</span></li>
                         <li class="list-group-item d-flex justify-content-between px-0"><span class="fw-semibold">Time zone</span><span>{{ $client->timezone ?? '-' }}</span></li>
                         <li class="list-group-item d-flex justify-content-between px-0"><span class="fw-semibold">Weekly check-in day</span><span>{{ ucfirst($client->weekly_checkin_day) }}</span></li>
                         <li class="list-group-item d-flex justify-content-between px-0"><span class="fw-semibold">Activity sync</span><span>{{ $client->is_health_connected ? formatName($client->health_source) : 'Not connected' }}</span></li>

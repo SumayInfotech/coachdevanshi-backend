@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PathwayResource;
+use App\Models\City;
 use App\Support\FormSchema;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -237,8 +238,9 @@ class OnboardingController extends Controller
             'mobile'     => $user->mobile,
             'dob'        => $user->dob?->format('Y-m-d'),
             'gender'     => $user->gender,
-            'city'       => $user->city_name,
             'country'    => $user->country_name,
+            'state_id'   => $user->state_id,
+            'city_id'    => $user->city_id,
             'timezone'   => $user->timezone,
         ], fn ($value) => !is_null($value));
     }
@@ -252,8 +254,9 @@ class OnboardingController extends Controller
             'nickname' => 'nickname',
             'dob'      => 'dob',
             'gender'   => 'gender',
-            'city'     => 'city_name',
             'country'  => 'country_name',
+            'state_id' => 'state_id',
+            'city_id'  => 'city_id',
             'timezone' => 'timezone',
         ];
 
@@ -262,6 +265,9 @@ class OnboardingController extends Controller
             if (array_key_exists($answerKey, $answers)) {
                 $data[$column] = $answers[$answerKey];
             }
+        }
+        if (array_key_exists('city_id', $data)) {
+            $data['city_name'] = $data['city_id'] ? City::whereKey($data['city_id'])->value('name') : null;
         }
         if (isset($data['timezone']) && !in_array($data['timezone'], timezone_identifiers_list())) {
             unset($data['timezone']);
