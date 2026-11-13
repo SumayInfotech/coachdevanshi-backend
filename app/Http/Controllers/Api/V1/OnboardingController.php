@@ -87,6 +87,11 @@ class OnboardingController extends Controller
             $this->syncProfile($user, $answers);
         }
 
+        // Profile counts as completed once all chapters are completed (consent is a separate step)
+        if (!$user->is_profile_completed && $this->nextPendingChapter($user) === null) {
+            $user->update(['is_profile_completed' => true]);
+        }
+
         activity_log(
             log: 'API Onboarding',
             event: $draft ? 'onboarding_chapter_draft_saved' : 'onboarding_chapter_completed',
