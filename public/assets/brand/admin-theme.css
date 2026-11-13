@@ -104,7 +104,7 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 { color: var(--dd-ink); }
 
 /* ---------- Loader ---------- */
 #global-loader { background: var(--dd-bg) !important; }
-#global-loader .loader-img { width: 64px; height: 64px; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: dd-pulse 1.2s ease-in-out infinite; }
+#global-loader .loader-img { position: fixed; width: 64px; height: 64px; inset: 50% auto auto 50%; margin: 0; transform: translate(-50%, -50%); animation: dd-pulse 1.2s ease-in-out infinite; }
 @keyframes dd-pulse { 0%, 100% { opacity: .55; transform: translate(-50%, -50%) scale(.92); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
 
 /* ---------- Sidebar ---------- */
