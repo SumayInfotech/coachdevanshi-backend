@@ -68,6 +68,7 @@ class ProfileController extends Controller
             'name'         => 'nullable|max:255',
             'last_name'         => 'nullable|max:255',
             'mobile'         => 'nullable|numeric',
+            'timezone'       => 'nullable|timezone',
             'profile_image' => [
                 'nullable',
                 'image',
@@ -112,6 +113,10 @@ class ProfileController extends Controller
             if ($request->exists($field)) {
                 $data[$field] = $request->input($field);
             }
+        }
+
+        if ($request->filled('timezone')) {
+            $data['timezone'] = $request->input('timezone');
         }
 
         $user->update($data);

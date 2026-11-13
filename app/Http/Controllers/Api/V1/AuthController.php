@@ -501,6 +501,8 @@ class AuthController extends Controller
                 Mail::to($user->email)->send(new SignupOtpMail($otp, $user, 'login'));
             } catch (\Throwable $e) {
                 Log::error('Login email OTP failed: ' . $e->getMessage());
+
+                return jsonResponse(false, 'We could not send the OTP email right now. Please try again later or log in with your mobile number.');
             }
         }
 
