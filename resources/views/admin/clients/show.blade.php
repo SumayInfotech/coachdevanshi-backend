@@ -155,16 +155,17 @@
                                             <td>{{ $plan->status === 'Active' ? $plan->days_left : '-' }}</td>
                                             <td><span class="badge {{ $statusBadge($plan->status) }}">{{ $plan->status }}</span></td>
                                             @if($editPermission)
-                                                <td>
-                                                    <form method="POST" action="{{ route($routePrefix . '.plans.update', $plan->uuid) }}" class="d-flex gap-1">
+                                                <td class="text-nowrap">
+                                                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editPlan{{ $plan->id }}" title="Edit plan"><i class="fe fe-edit"></i> Edit</button>
+                                                    <form method="POST" action="{{ route($routePrefix . '.plans.update', $plan->uuid) }}" class="d-inline">
                                                         @csrf @method('PUT')
-                                                        <input type="date" name="end_date" value="{{ $plan->end_date->toDateString() }}" class="form-control form-control-sm" style="max-width:150px">
-                                                        <select name="status" class="form-control form-control-sm" style="max-width:110px">
-                                                            @foreach(['Active', 'Expired', 'Cancelled'] as $status)
-                                                                <option value="{{ $status }}" {{ $plan->status === $status ? 'selected' : '' }}>{{ $status }}</option>
-                                                            @endforeach
-                                                        </select>
-                                                        <button class="btn btn-sm btn-primary" title="Save"><i class="fe fe-check"></i></button>
+                                                        @if($plan->status === 'Active')
+                                                            <input type="hidden" name="status" value="Cancelled">
+                                                            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Deactivate this plan?')">Deactivate</button>
+                                                        @else
+                                                            <input type="hidden" name="status" value="Active">
+                                                            <button class="btn btn-sm btn-outline-success" onclick="return confirm('Activate this plan?')">Activate</button>
+                                                        @endif
                                                     </form>
                                                 </td>
                                             @endif
@@ -177,6 +178,62 @@
                             </div>
 
                             @if($editPermission)
+                                @foreach($plans as $plan)
+                                    <div class="modal fade" id="editPlan{{ $plan->id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg">
+                                            <form method="POST" action="{{ route($routePrefix . '.plans.update', $plan->uuid) }}" class="modal-content">
+                                                @csrf @method('PUT')
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Edit plan</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body row g-3">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Plan title <span class="text-danger">*</span></label>
+                                                        <input type="text" name="title" class="form-control" value="{{ $plan->title }}" required>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label">Pathway</label>
+                                                        <select name="pathway_uuid" class="form-control">
+                                                            @foreach($pathways as $pathway)
+                                                                <option value="{{ $pathway->uuid }}" {{ $plan->pathway_uuid === $pathway->uuid ? 'selected' : '' }}>{{ $pathway->title }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label class="form-label">Start date <span class="text-danger">*</span></label>
+                                                        <input type="date" name="start_date" class="form-control" value="{{ $plan->start_date->toDateString() }}" required>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label class="form-label">End date <span class="text-danger">*</span></label>
+                                                        <input type="date" name="end_date" class="form-control" value="{{ $plan->end_date->toDateString() }}" required>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label class="form-label">Duration (months)</label>
+                                                        <input type="number" name="duration_months" min="1" max="24" class="form-control" value="{{ $plan->duration_months }}">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label class="form-label">Status</label>
+                                                        <select name="status" class="form-control">
+                                                            @foreach(['Active', 'Expired', 'Cancelled'] as $status)
+                                                                <option value="{{ $status }}" {{ $plan->status === $status ? 'selected' : '' }}>{{ $status }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <label class="form-label">Internal notes</label>
+                                                        <textarea name="notes" rows="2" class="form-control">{{ $plan->notes }}</textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-success">Save changes</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                @endforeach
+
                                 <div class="card border mt-3">
                                     <div class="card-header bg-light"><h6 class="mb-0">Assign / renew plan</h6></div>
                                     <div class="card-body">

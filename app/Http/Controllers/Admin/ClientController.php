@@ -162,14 +162,29 @@ class ClientController extends Controller
         $plan = UserPlan::where('uuid', $planUuid)->firstOrFail();
 
         $request->validate([
-            'end_date' => ['required', 'date', 'after_or_equal:' . $plan->start_date->toDateString()],
-            'status'   => ['required', 'in:Active,Expired,Cancelled'],
+            'title'           => ['sometimes', 'required', 'string', 'max:255'],
+            'pathway_uuid'    => ['nullable', Rule::exists('pathways', 'uuid')],
+            'duration_months' => ['nullable', 'integer', 'between:1,24'],
+            'start_date'      => ['sometimes', 'required', 'date'],
+            'end_date'        => ['sometimes', 'required', 'date', 'after_or_equal:' . ($request->start_date ?: $plan->start_date->toDateString())],
+            'status'          => ['sometimes', 'required', 'in:Active,Expired,Cancelled'],
+            'notes'           => ['nullable', 'string', 'max:2000'],
         ]);
 
-        $old = ['end_date' => $plan->end_date->toDateString(), 'status' => $plan->status];
-        $plan->update(['end_date' => $request->end_date, 'status' => $request->status]);
+        $old = $plan->only('title', 'pathway_uuid', 'start_date', 'end_date', 'status', 'notes');
+        $data = $request->only('title', 'start_date', 'end_date', 'status');
+        if ($request->has('pathway_uuid')) {
+            $data['pathway_uuid'] = $request->pathway_uuid ?: $plan->pathway_uuid;
+        }
+        if ($request->has('notes')) {
+            $data['notes'] = $request->notes;
+        }
+        if ($request->has('duration_months')) {
+            $data['duration_months'] = $request->duration_months ?: null;
+        }
+        $plan->update($data);
 
-        activity_log(log: 'Client', event: 'plan_updated', subject: $plan, properties: ['old' => $old, 'new' => $request->only('end_date', 'status')]);
+        activity_log(log: 'Client', event: 'plan_updated', subject: $plan, properties: ['old' => $old, 'new' => $data]);
 
         return redirect()->to(route($this->routePrefix . '.show', $plan->user_uuid) . '#tab-plan')->with('success', 'Plan updated successfully.');
     }
