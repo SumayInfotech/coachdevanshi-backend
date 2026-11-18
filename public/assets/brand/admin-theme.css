@@ -352,7 +352,7 @@ body.dark-mode .btn-primary { color: #1b1617 !important; }
 .btn-light:hover { border-color: var(--dd-line-strong) !important; color: var(--dd-primary) !important; }
 /* table action icon buttons */
 .btn-list .btn-sm, td .btn-sm { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
-td .btn-sm.status-text, td .btn-sm.btn-pill { width: auto; height: auto; padding: .2rem .7rem; }
+td .btn-sm.status-text, td .btn-sm.btn-pill { width: auto; height: auto; padding: .35rem .9rem; }
 td .btn-sm.btn-primary { background: var(--dd-primary-soft) !important; color: var(--dd-primary) !important; border-color: transparent !important; }
 td .btn-sm.btn-primary:hover { background: var(--dd-primary) !important; color: #fff !important; }
 td .btn-sm.btn-danger:not(.status-text) { background: var(--dd-danger-soft) !important; color: var(--dd-danger) !important; border-color: transparent !important; }

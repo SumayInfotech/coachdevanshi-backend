@@ -157,15 +157,15 @@
                                             @if($editPermission)
                                                 <td class="text-nowrap">
                                                   <div class="d-flex align-items-center gap-2">
-                                                    <button type="button" class="btn btn-sm btn-primary px-3" data-bs-toggle="modal" data-bs-target="#editPlan{{ $plan->id }}" title="Edit plan">Edit</button>
+                                                    <button type="button" class="btn btn-sm btn-primary status-text px-3" data-bs-toggle="modal" data-bs-target="#editPlan{{ $plan->id }}" title="Edit plan">Edit</button>
                                                     <form method="POST" action="{{ route($routePrefix . '.plans.update', $plan->uuid) }}" class="m-0">
                                                         @csrf @method('PUT')
                                                         @if($plan->status === 'Active')
                                                             <input type="hidden" name="status" value="Cancelled">
-                                                            <button type="submit" class="btn btn-sm btn-outline-danger px-3" onclick="return confirm('Deactivate this plan?')">Deactivate</button>
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger status-text px-3" onclick="return confirm('Deactivate this plan?')">Deactivate</button>
                                                         @else
                                                             <input type="hidden" name="status" value="Active">
-                                                            <button type="submit" class="btn btn-sm btn-outline-success px-3" onclick="return confirm('Activate this plan?')">Activate</button>
+                                                            <button type="submit" class="btn btn-sm btn-outline-success status-text px-3" onclick="return confirm('Activate this plan?')">Activate</button>
                                                         @endif
                                                     </form>
                                                   </div>
