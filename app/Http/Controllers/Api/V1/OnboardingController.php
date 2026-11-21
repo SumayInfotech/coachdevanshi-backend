@@ -87,9 +87,14 @@ class OnboardingController extends Controller
             $this->syncProfile($user, $answers);
         }
 
-        // Profile counts as completed once all chapters are completed (consent is a separate step)
-        if (!$user->is_profile_completed && $this->nextPendingChapter($user) === null) {
-            $user->update(['is_profile_completed' => true]);
+        // Finishing the last chapter completes onboarding. The consent step is optional: the app may skip it,
+        // and POST /onboarding/consent only records the agreement when the app does show it.
+        if (!$draft && $this->nextPendingChapter($user) === null) {
+            $user->update([
+                'is_profile_completed'    => true,
+                'is_onboarding_completed' => true,
+                'onboarding_completed_at' => $user->onboarding_completed_at ?? now(),
+            ]);
         }
 
         activity_log(

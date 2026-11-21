@@ -187,47 +187,50 @@ class DashboardController extends Controller
         ];
     }
 
-    /** Average mood and energy (1–5) across all daily check-ins per day. */
+    /** Share of daily check-ins per day where each habit the app asks about was ticked (0-100). */
     private function wellnessSeries(Carbon $today, int $days): array
     {
         $start = $today->copy()->subDays($days - 1);
-        $rows = DailyCheckin::whereDate('record_date', '>=', $start)->get(['record_date', 'mood', 'energy'])
+        $rows = DailyCheckin::whereDate('record_date', '>=', $start)
+            ->get(['record_date', 'water_goal_met', 'movement_done', 'meditation_done', 'journaling_done'])
             ->groupBy(fn ($r) => $r->record_date->toDateString());
 
         $range = collect(range(0, $days - 1))->map(fn ($i) => $start->copy()->addDays($i));
-        $avg = function ($date, $field) use ($rows) {
-            $value = $rows->get($date, collect())->whereNotNull($field)->avg($field);
+        $rate = function ($date, $field) use ($rows) {
+            $answered = $rows->get($date, collect())->whereNotNull($field);
 
-            return $value !== null ? round($value, 1) : null;
+            return $answered->count() ? $this->percent($answered->filter(fn ($r) => (bool) $r->$field)->count(), $answered->count()) : null;
         };
 
         return [
             'labels' => $range->map(fn ($d) => $d->format('d M'))->all(),
-            'mood' => $range->map(fn ($d) => $avg($d->toDateString(), 'mood'))->all(),
-            'energy' => $range->map(fn ($d) => $avg($d->toDateString(), 'energy'))->all(),
+            'water' => $range->map(fn ($d) => $rate($d->toDateString(), 'water_goal_met'))->all(),
+            'movement' => $range->map(fn ($d) => $rate($d->toDateString(), 'movement_done'))->all(),
+            'meditation' => $range->map(fn ($d) => $rate($d->toDateString(), 'meditation_done'))->all(),
+            'journaling' => $range->map(fn ($d) => $rate($d->toDateString(), 'journaling_done'))->all(),
         ];
     }
 
     private function wellnessSnapshot(Carbon $today, int $days): array
     {
         $rows = DailyCheckin::whereDate('record_date', '>=', $today->copy()->subDays($days - 1))
-            ->get(['mood', 'energy', 'sleep_hours', 'water_goal_met', 'movement_done', 'meditation_done']);
+            ->get(['sleep_hours', 'steps', 'water_goal_met', 'movement_done', 'meditation_done', 'journaling_done']);
 
         $rate = function ($field) use ($rows) {
             $answered = $rows->whereNotNull($field);
 
             return $answered->count() ? $this->percent($answered->filter(fn ($r) => (bool) $r->$field)->count(), $answered->count()) : null;
         };
-        $avg = fn ($field) => ($v = $rows->whereNotNull($field)->avg($field)) !== null ? round($v, 1) : null;
+        $avg = fn ($field, $precision = 1) => ($v = $rows->whereNotNull($field)->avg($field)) !== null ? round($v, $precision) : null;
 
         return [
             'entries' => $rows->count(),
-            'mood' => $avg('mood'),
-            'energy' => $avg('energy'),
             'sleep' => $avg('sleep_hours'),
+            'steps' => $avg('steps', 0),
             'water' => $rate('water_goal_met'),
             'movement' => $rate('movement_done'),
             'meditation' => $rate('meditation_done'),
+            'journaling' => $rate('journaling_done'),
         ];
     }
 

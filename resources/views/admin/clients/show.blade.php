@@ -376,7 +376,7 @@
                         </ul>
                         <div class="small text-muted mt-1">Accepted {{ $client->consent->accepted_at?->format('d M Y, h:i A') }} from {{ $client->consent->ip_address }}</div>
                     @else
-                        <p class="text-muted">Not submitted yet.</p>
+                        <p class="text-muted mb-0">No consent agreement was recorded. The app does not ask for it, so this is not required.</p>
                     @endif
                 </div>
 
@@ -398,7 +398,7 @@
                     <div class="table-responsive">
                         <table class="table table-bordered table-sm align-middle">
                             <thead class="bg-light">
-                                <tr><th>Date</th><th>Day</th><th>Weight</th><th>Sleep</th><th>Steps</th><th>Water</th><th>Mood / Energy</th><th>Nutrition</th><th>Mindset</th><th>Meals</th><th>Notes</th><th>Photos</th></tr>
+                                <tr><th>Date</th><th>Day</th><th>Weight</th><th>Sleep</th><th>Steps</th><th>Water</th><th>Movement</th><th>Mindset</th><th>Meals</th></tr>
                             </thead>
                             <tbody>
                             @forelse($dailyCheckins as $checkin)
@@ -413,10 +413,8 @@
                                     </td>
                                     <td>{{ $checkin->steps ? number_format($checkin->steps) : '-' }}</td>
                                     <td>{{ $checkin->water_intake ? $checkin->water_intake . ' ' . $checkin->water_unit : (is_null($checkin->water_goal_met) ? '-' : ($checkin->water_goal_met ? 'Goal met' : 'Not yet')) }}</td>
-                                    <td>{{ $checkin->mood ?? '-' }} / {{ $checkin->energy ?? '-' }}</td>
                                     <td class="small">
-                                        {{ config('tracking.nutrition_adherence.' . $checkin->nutrition_adherence, '-') }}
-                                        @if(!is_null($checkin->movement_done))<div class="text-muted">Movement: {{ $checkin->movement_done ? 'Yes' : 'No' }} {{ $checkin->movement_type }}</div>@endif
+                                        @if(is_null($checkin->movement_done))-@else{{ $checkin->movement_done ? 'Yes' : 'No' }} {{ $checkin->movement_type }}@endif
                                     </td>
                                     <td class="small">
                                         @if(!is_null($checkin->meditation_done))<div>Meditation: {{ $checkin->meditation_done ? 'Yes' : 'No' }}</div>@endif
@@ -428,15 +426,9 @@
                                             <div><strong>{{ config('tracking.meal_slots.' . $slot, formatName($slot)) }}</strong> {{ $meal['time'] ?? '' }}: {{ $meal['items'] ?? '' }}</div>
                                         @endforeach
                                     </td>
-                                    <td class="small">{{ $checkin->notes }}</td>
-                                    <td>
-                                        @foreach(fileUrls($checkin->photos) as $url)
-                                            <a href="{{ $url }}" target="_blank"><img src="{{ $url }}" alt="Check-in photo" width="40" height="40" class="rounded border mb-1" style="object-fit:cover;"></a>
-                                        @endforeach
-                                    </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="12" class="text-center text-muted">No daily check-ins yet.</td></tr>
+                                <tr><td colspan="9" class="text-center text-muted">No daily check-ins yet.</td></tr>
                             @endforelse
                             </tbody>
                         </table>

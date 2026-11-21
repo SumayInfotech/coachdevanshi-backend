@@ -266,23 +266,25 @@
                 <div class="dd-card-head">
                     <div>
                         <h5>Wellness snapshot</h5>
-                        <div class="dd-sub">Averages from {{ $wellness['entries'] }} micro check-ins, last 30 days</div>
+                        <div class="dd-sub">Based on {{ $wellness['entries'] }} daily check-ins, last 30 days</div>
                     </div>
                 </div>
                 <div class="card-body">
                     <div class="dd-well-grid mb-4">
-                        <div class="dd-well"><div class="dd-well-label"><i class="fe fe-smile"></i> Mood</div><div class="dd-well-value">{{ $wellness['mood'] ?? '–' }}<small> / 5</small></div></div>
-                        <div class="dd-well"><div class="dd-well-label"><i class="fe fe-zap"></i> Energy</div><div class="dd-well-value">{{ $wellness['energy'] ?? '–' }}<small> / 5</small></div></div>
                         <div class="dd-well"><div class="dd-well-label"><i class="fe fe-moon"></i> Sleep</div><div class="dd-well-value">{{ $wellness['sleep'] ?? '–' }}<small> hrs</small></div></div>
                         <div class="dd-well"><div class="dd-well-label"><i class="fe fe-droplet"></i> Water goal</div><div class="dd-well-value">{{ $wellness['water'] ?? '–' }}<small>{{ $wellness['water'] !== null ? '%' : '' }}</small></div></div>
                         <div class="dd-well"><div class="dd-well-label"><i class="fe fe-trending-up"></i> Movement</div><div class="dd-well-value">{{ $wellness['movement'] ?? '–' }}<small>{{ $wellness['movement'] !== null ? '%' : '' }}</small></div></div>
                         <div class="dd-well"><div class="dd-well-label"><i class="fe fe-sun"></i> Meditation</div><div class="dd-well-value">{{ $wellness['meditation'] ?? '–' }}<small>{{ $wellness['meditation'] !== null ? '%' : '' }}</small></div></div>
+                        <div class="dd-well"><div class="dd-well-label"><i class="fe fe-edit-3"></i> Journaling</div><div class="dd-well-value">{{ $wellness['journaling'] ?? '–' }}<small>{{ $wellness['journaling'] !== null ? '%' : '' }}</small></div></div>
+                        <div class="dd-well"><div class="dd-well-label"><i class="fe fe-activity"></i> Avg steps</div><div class="dd-well-value">{{ $wellness['steps'] !== null ? number_format($wellness['steps']) : '–' }}</div></div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="fw-semibold" style="color:var(--dd-ink);font-size:13.5px">Mood &amp; energy trend</span>
+                        <span class="fw-semibold" style="color:var(--dd-ink);font-size:13.5px">Daily habits completed (%)</span>
                         <div class="dd-legend">
-                            <span><i style="background:{{ $palette[2] }}"></i>Mood</span>
-                            <span><i style="background:{{ $palette[1] }}"></i>Energy</span>
+                            <span><i style="background:{{ $palette[1] }}"></i>Water</span>
+                            <span><i style="background:{{ $palette[2] }}"></i>Movement</span>
+                            <span><i style="background:{{ $palette[3] }}"></i>Meditation</span>
+                            <span><i style="background:{{ $palette[4] }}"></i>Journaling</span>
                         </div>
                     </div>
                     <div class="dd-chart sm"><canvas id="chartWellness"></canvas></div>
@@ -579,11 +581,13 @@
                 data: {
                     labels: data.wellness.labels,
                     datasets: [
-                        { label: 'Mood', data: data.wellness.mood, borderColor: palette[2], backgroundColor: palette[2], borderWidth: 2.5, tension: .35, cubicInterpolationMode: 'monotone', pointRadius: 0, pointHoverRadius: 4, spanGaps: true },
-                        { label: 'Energy', data: data.wellness.energy, borderColor: palette[1], backgroundColor: palette[1], borderWidth: 2.5, tension: .35, cubicInterpolationMode: 'monotone', pointRadius: 0, pointHoverRadius: 4, spanGaps: true },
+                        { label: 'Water', data: data.wellness.water, borderColor: palette[1], backgroundColor: palette[1], borderWidth: 2.5, tension: .35, cubicInterpolationMode: 'monotone', pointRadius: 0, pointHoverRadius: 4, spanGaps: true },
+                        { label: 'Movement', data: data.wellness.movement, borderColor: palette[2], backgroundColor: palette[2], borderWidth: 2.5, tension: .35, cubicInterpolationMode: 'monotone', pointRadius: 0, pointHoverRadius: 4, spanGaps: true },
+                        { label: 'Meditation', data: data.wellness.meditation, borderColor: palette[3], backgroundColor: palette[3], borderWidth: 2.5, tension: .35, cubicInterpolationMode: 'monotone', pointRadius: 0, pointHoverRadius: 4, spanGaps: true },
+                        { label: 'Journaling', data: data.wellness.journaling, borderColor: palette[4], backgroundColor: palette[4], borderWidth: 2.5, tension: .35, cubicInterpolationMode: 'monotone', pointRadius: 0, pointHoverRadius: 4, spanGaps: true },
                     ],
                 },
-                options: Object.assign({}, base, { scales: axes({ beginAtZero: false, min: 1, max: 5, ticks: { stepSize: 1 } }) }),
+                options: Object.assign({}, base, { scales: axes({ beginAtZero: true, min: 0, max: 100, ticks: { stepSize: 25 } }) }),
             }));
         }
 
