@@ -1,103 +1,67 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
+{{-- Reset-password email, used by the customer mailable and the admin notification. Vars: $user, $resetUrl --}}
+@php
+    $minutes = (int) config('auth.passwords.users.expire', 60);
+    $span    = trans_choice('emails.reset_minutes', $minutes, ['count' => $minutes]);
+@endphp
 
-    @php
-        $projectTitle = setting('project_title', 'Admin Panel');
-    @endphp
+@extends('emails.layouts.base')
 
-    <title>{{ $projectTitle }} | Reset Password</title>
+@section('title', __('emails.reset_title'))
+@section('preheader', __('emails.reset_preheader'))
 
-    <link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@400;500;600;700&display=swap" rel="stylesheet">
+@section('content')
+    <p style="margin:0 0 10px;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#c46e77;">
+        {{ __('emails.reset_eyebrow') }}
+    </p>
 
-    <style>
-        body {
-            font-family: 'Gabarito', sans-serif !important;
-        }
-    </style>
-</head>
+    <h1 class="dd-h1" style="margin:0 0 22px;font-family:'Playfair Display',Georgia,'Times New Roman',serif;font-size:30px;line-height:1.25;font-weight:700;color:#2b2224;">
+        {{ __('emails.reset_title') }}
+    </h1>
 
-<body style="margin:0;padding:0;background-color:#F4F4E9;">
+    <p style="margin:0 0 12px;font-size:16px;line-height:1.65;color:#4a3f40;">
+        @if (!empty($user->name))
+            {{ __('emails.hello') }} <strong style="color:#2b2224;">{{ $user->name }}</strong>,
+        @else
+            {{ __('emails.hello') }},
+        @endif
+    </p>
 
-<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0;">
-    <tr>
-        <td align="center">
+    <p style="margin:0 0 32px;font-size:16px;line-height:1.65;color:#4a3f40;">
+        {{ __('emails.reset_intro') }}
+    </p>
 
-            <table width="600" cellpadding="0" cellspacing="0" style="
-                background:#ffffff;
-                border-radius:10px;
-                overflow:hidden;
-                box-shadow:0 10px 30px rgba(0,0,0,0.08);
-            ">
+    {{-- Bulletproof button --}}
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 12px;">
+        <tr>
+            <td align="center" bgcolor="#8b4a4f" style="border-radius:12px;background-color:#8b4a4f;">
+                <a href="{{ $resetUrl }}" target="_blank"
+                   style="display:inline-block;padding:16px 40px;font-family:'Inter',-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;line-height:1;color:#ffffff;text-decoration:none;border-radius:12px;">
+                    {{ __('emails.reset_button') }}
+                </a>
+            </td>
+        </tr>
+    </table>
 
-                <!-- HEADER -->
-                <tr>
-                    <td align="center" style="background:#1E1E1E;padding:30px;">
-                        <img src="{{ setting('app_icon') ? getFileUrl(setting('app_icon')) : asset('assets/sash/images/brand/logo-white.png') }}"
-                             width="140"
-                             alt="Logo">
-                    </td>
-                </tr>
+    <p style="margin:0 0 28px;text-align:center;font-size:13px;line-height:1.5;color:#7d6b6d;">
+        {{ __('emails.reset_expiry', ['minutes' => $span]) }}
+    </p>
 
-                <!-- BODY -->
-                <tr>
-                    <td style="padding:40px 35px 30px;">
+    {{-- Fallback link --}}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td style="background-color:#fdf8f5;border:1px solid #eee3df;border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.6;color:#7d6b6d;">
+                {{ __('emails.reset_fallback') }}<br>
+                <a href="{{ $resetUrl }}" target="_blank" style="color:#8b4a4f;word-break:break-all;text-decoration:underline;">{{ $resetUrl }}</a>
+            </td>
+        </tr>
+    </table>
 
-                        <h1 style="color:#1E1E1E;font-size:26px;font-weight:700;">
-                            Reset Your Password
-                        </h1>
-
-                        <p style="color:#414141;font-size:16px;line-height:1.6;">
-                            Hello <strong>{{ $user->name ?? 'User' }}</strong>,
-                        </p>
-
-                        <p style="color:#414141;font-size:16px;line-height:1.6;">
-                            We received a request to reset your password.
-                            Click the button below to set a new password.
-                        </p>
-
-                        <!-- CTA BUTTON -->
-                        <div style="text-align:center;margin:35px 0;">
-                            <a href="{{ route('customer.password.reset', ['token' => $token]) }}"
-
-                               style="
-                                   display:inline-block;
-                                   background:#F29217;
-                                   color:#ffffff;
-                                   text-decoration:none;
-                                   padding:14px 34px;
-                                   border-radius:6px;
-                                   font-size:16px;
-                                   font-weight:600;
-                                   text-transform:uppercase;
-                               ">
-                                Reset Password
-                            </a>
-                        </div>
-
-                        <p style="color:#9D651E;font-size:14px;">
-                            This link is valid for <strong>30 minutes</strong>.
-                            If you didn’t request this, please ignore this email.
-                        </p>
-
-                    </td>
-                </tr>
-
-                <!-- FOOTER -->
-                <tr>
-                    <td style="background:#F4F4E9;padding:20px;text-align:center;">
-                        <p style="margin:0;font-size:12px;color:#414141;">
-                            © {{ date('Y') }} {{ $projectTitle }}. All rights reserved.
-                        </p>
-                    </td>
-                </tr>
-
-            </table>
-
-        </td>
-    </tr>
-</table>
-
-</body>
-</html>
+    {{-- Security note --}}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;">
+        <tr>
+            <td style="background-color:#edf1e4;border-left:4px solid #6f8a5b;border-radius:8px;padding:16px 18px;font-size:14px;line-height:1.6;color:#4a3f40;">
+                {{ __('emails.reset_ignore') }}
+            </td>
+        </tr>
+    </table>
+@endsection

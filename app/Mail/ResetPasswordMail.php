@@ -20,9 +20,12 @@ class ResetPasswordMail extends Mailable
 
     public function build()
     {
-        app()->setLocale(appLanguage());
+        // Emails are always sent in English.
+        app()->setLocale('en');
 
         return $this->subject('Reset Your Password')
-                    ->view('emails.reset-password');
+                    ->view('emails.reset-password', [
+                        'resetUrl' => route('customer.password.reset', ['token' => $this->token]),
+                    ]);
     }
 }

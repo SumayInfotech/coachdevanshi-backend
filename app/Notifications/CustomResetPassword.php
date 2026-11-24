@@ -12,6 +12,9 @@ class CustomResetPassword extends Notification
     public function __construct(string $token)
     {
         $this->token = $token;
+
+        // Emails are always sent in English.
+        $this->locale('en');
     }
 
     public function via($notifiable)
@@ -28,7 +31,7 @@ class CustomResetPassword extends Notification
 
         return (new MailMessage)
             ->subject('Reset Your Password')
-            ->view('admin.emails.reset-password', [
+            ->view('emails.reset-password', [
                 'user' => $notifiable,
                 'resetUrl' => $resetUrl,
             ]);

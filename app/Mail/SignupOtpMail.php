@@ -12,17 +12,21 @@ class SignupOtpMail extends Mailable
     public $otp;
     public $user;
     public $type;
+    public $minutes;
 
-    public function __construct($otp, $user,$type = 'signup')
+    // $minutes must match the otp_expires_at window set in AuthController.
+    public function __construct($otp, $user, $type = 'signup', $minutes = 2)
     {
-        $this->otp  = $otp;
-        $this->user = $user;
-        $this->type = $type;
+        $this->otp     = $otp;
+        $this->user    = $user;
+        $this->type    = $type;
+        $this->minutes = $minutes;
     }
 
     public function build()
     {
-        app()->setLocale(appLanguage());
+        // Emails are always sent in English.
+        app()->setLocale('en');
 
         // $type = $this->type === 'signup' ? 'Signup' : 'Login';
         $subjects = [
