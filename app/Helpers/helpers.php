@@ -301,122 +301,117 @@ if (!function_exists('verifyOtp')) {
     }
 }
 
+
+if (!function_exists('firebaseCredentials')) {
+    /**
+     * The Firebase service-account JSON as an array, or null when it isn't configured.
+     */
+    function firebaseCredentials(): ?array
+    {
+        $path = config('services.firebase.credentials');
+        if (!$path) {
+            return null;
+        }
+        if (!is_file($path)) {
+            $path = base_path($path);
+        }
+        if (!is_file($path)) {
+            return null;
+        }
+        $credentials = json_decode((string) file_get_contents($path), true);
+
+        return is_array($credentials) && !empty($credentials['private_key']) ? $credentials : null;
+    }
+}
+
 if (!function_exists('sendNotification')) {
+    /**
+     * Send an FCM push to one or more device tokens. Returns the FCM responses, or false when nothing was sent.
+     * Tokens FCM reports as no longer valid are removed from user_fcm_tokens.
+     */
     function sendNotification($tokens, $title, $body, $data = [])
     {
+        $tokens = array_values(array_unique(array_filter((array) $tokens)));
         if (empty($tokens)) {
             return false;
         }
-        
-        // Normalize to array
-        if (!is_array($tokens)) {
-            $tokens = [$tokens];
-        }
-        // Path to your Firebase service account JSON file (FIREBASE_CREDENTIALS is relative to the project root)
-        $credentialsPath = base_path(env('FIREBASE_CREDENTIALS', '2m1k-213e7-firebase-adminsdk-fbsvc-f45dd7b09b.json'));
-        if (!is_file($credentialsPath)) {
-            \Log::warning('FCM credentials file not found, push skipped', ['path' => $credentialsPath]);
+
+        $credentials = firebaseCredentials();
+        if (!$credentials) {
+            \Log::warning('FCM credentials not configured, push skipped. Set FIREBASE_CREDENTIALS in .env.', [
+                'path' => config('services.firebase.credentials'),
+            ]);
             return false;
         }
 
-        // Generate an OAuth2 access token
-        $accessToken = getAccessToken($credentialsPath);
-        // Firebase Cloud Messaging API URL
-        $url = 'https://fcm.googleapis.com/v1/projects/' . env('FIREBASE_PROJECT_ID', 'men1kitchen') . '/messages:send';
-        $responses  = [];
-        foreach ($tokens as $token) {
+        $projectId   = config('services.firebase.project_id') ?: ($credentials['project_id'] ?? null);
+        $accessToken = getAccessToken($credentials);
+        $url         = 'https://fcm.googleapis.com/v1/projects/' . $projectId . '/messages:send';
+        // FCM data values must be strings
+        $data = collect($data)->map(fn ($v) => is_scalar($v) ? (string) $v : json_encode($v))->all();
 
-            if (!$token) {
+        $responses = [];
+        foreach ($tokens as $token) {
+            $message = [
+                'message' => [
+                    'token'        => $token,
+                    'notification' => ['title' => (string) $title, 'body' => (string) $body],
+                    'data'         => (object) $data,
+                    'android'      => ['priority' => 'high', 'notification' => ['sound' => 'default']],
+                    'apns'         => [
+                        'headers' => ['apns-priority' => '10'],
+                        'payload' => ['aps' => ['sound' => 'default']],
+                    ],
+                ],
+            ];
+
+            try {
+                $response = \Illuminate\Support\Facades\Http::withToken($accessToken)->timeout(15)->post($url, $message);
+            } catch (\Throwable $e) {
+                \Log::error('FCM request failed', ['error' => $e->getMessage()]);
                 continue;
             }
 
-            // Prepare the message payload
-            $message = [
-                'message' => [
-                    'token' => $token,
-                    'notification' => [
-                        'title' => $title,
-                        'body' => $body
-                    ],
-                    'data' => $data,
-                ]
-            ];
+            $responses[] = $response->json();
+            if ($response->failed()) {
+                $status  = $response->json('error.status');
+                $message = (string) $response->json('error.message');
+                \Log::error('FCM push rejected', ['http' => $response->status(), 'status' => $status, 'error' => $message]);
 
-            // Set up the HTTP headers
-            $headers = [
-                'Authorization: Bearer ' . $accessToken,
-                'Content-Type: application/json'
-            ];
-
-            // Initialize cURL
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($message));
-
-            // Execute the request
-            $response = curl_exec($ch);
-            // Check for errors
-            if ($response === FALSE) {
-                //die('Curl failed: ' . curl_error($ch));
-                \Log::error('FCM Curl Error', [
-                    'error' => curl_error($ch),
-                    'token' => $token
-                ]);
-            }else {
-                $responses[] = json_decode($response, true);
+                // The app was uninstalled or the token rotated: stop sending to it.
+                if (in_array($status, ['UNREGISTERED', 'NOT_FOUND'], true)
+                    || ($status === 'INVALID_ARGUMENT' && str_contains($message, 'registration token'))) {
+                    UserFcmToken()->where('fcm_token', $token)->delete();
+                }
             }
-
-            // Close cURL
-            curl_close($ch);
         }
+
         return $responses;
     }
 }
 
 if (!function_exists('getAccessToken')) {
-    function getAccessToken($credentialsPath)
+    /**
+     * OAuth2 access token for FCM, cached until shortly before it expires.
+     */
+    function getAccessToken($credentials)
     {
-        
-        // Read the service account JSON file
-        $credentials = json_decode(file_get_contents($credentialsPath), true);
-
-        // Define the OAuth2 token URL
-        $url = 'https://oauth2.googleapis.com/token';
-
-        // Prepare the token request payload
-        $jwt = createJWT($credentials);
-
-        $data = [
-            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-            'assertion' => $jwt
-        ];
-
-        // Initialize cURL
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-
-        // Execute the request
-        $response = curl_exec($ch);
-        // Check for errors
-        if ($response === FALSE) {
-            die('Curl failed: ' . curl_error($ch));
+        if (is_string($credentials)) {
+            $credentials = json_decode((string) file_get_contents($credentials), true);
         }
 
-        // Close cURL
-        curl_close($ch);
+        return \Illuminate\Support\Facades\Cache::remember('fcm_access_token_' . md5($credentials['client_email']), 3300, function () use ($credentials) {
+            $response = \Illuminate\Support\Facades\Http::asForm()->timeout(15)->post('https://oauth2.googleapis.com/token', [
+                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                'assertion'  => createJWT($credentials),
+            ]);
 
-        // Parse the response
-        $responseData = json_decode($response, true);
+            if (!$response->successful() || !$response->json('access_token')) {
+                throw new \RuntimeException('FCM access token request failed: ' . $response->body());
+            }
 
-        // Return the access token
-        return $responseData['access_token'];
+            return $response->json('access_token');
+        });
     }
 }
 
